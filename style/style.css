@@ -61,10 +61,17 @@ body {
 @media screen and (max-width: 800px) {
     .leftcolumn {
         width: 100%;
+        float: none;
+        /* margin-bottom: 20px; */
     }
 
     .rightcolumn {
         float: none;
         width: 100%;
+    }
+    .card {
+        /* padding-bottom: 20px; */
+        margin-top: 20px;
+        padding: 5%;
     }
 }
