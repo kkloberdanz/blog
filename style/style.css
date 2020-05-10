@@ -21,23 +21,26 @@ body {
 
 /* Right column */
 .rightcolumn {
-    float: left;
-    width: 25%;
-    padding-left: 20px;
+    float: right;
+    width: 20%;
+    padding-left: 3%;
+    padding-right: 2%;
 }
 
 /* Fake image */
 .fakeimg {
     background-color: #aaa;
-    width: 100%;
-    padding: 20px;
+    width: 90%;
+    padding: 5%;
 }
 
 /* Add a card effect for articles */
 .card {
     background-color: white;
-    padding: 20px;
+    /* padding: 20px; */
     margin-top: 20px;
+    padding-right: 20px;
+    padding-left: 20px;
 }
 
 /* Clear floats after the columns */
@@ -57,9 +60,14 @@ body {
 
 /* Responsive layout - when the screen is less than 800px wide, make the two columns stack on top of each other instead of next to each other */
 @media screen and (max-width: 800px) {
-    .leftcolumn,
+    .leftcolumn {
+        padding: 2%;
+        width: 95%;
+    }
+
     .rightcolumn {
-        width: 100%;
-        padding: 0;
+        float: none;
+        padding: 2%;
+        width: 95%;
     }
 }
