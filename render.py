@@ -54,40 +54,37 @@ if __name__ == '__main__':
     if post_index <= 0:
         raise Exception('could not find post start')
 
-    to_render = sorted((
+    to_render = [
         fname
         for fname in os.listdir('templates')
-        if fname != 'template.html'),
-        reverse=True
-    )
+        if fname != 'template.html'
+    ]
 
     posts = sorted((
-        f'posts/{post}.html'
+        f'{post}.html'
         for fname in to_render
         for post in [fname.split('.')[0]]),
         reverse=True
     )
 
     names = [
-        (get_posttitle(os.path.join('templates', post)), os.path.join('posts', post))
+        (get_posttitle(os.path.join('templates', post)), post)
         for post in to_render
     ]
 
-    items = list(zip(to_render, posts, names))
-    print('rendering:', items)
+    print('rendering:', names)
     first = True
     links = populate_links(names)
     print('links =', links)
-    for filename, post, name in items:
+    for name, filename in names:
         with open(os.path.join('templates', filename)) as f:
             lines = f.readlines()
         post_contents = template[:post_index] + lines + template[post_index+1:links_index] + [links] + template[links_index+1:]
         text = ''.join(post_contents)
 
-        with open(post, 'w') as f:
+        with open(filename, 'w') as f:
             f.write(text)
         if first:
             first = False
             with open(f'index.html', 'w') as f:
                 f.write(text)
-
