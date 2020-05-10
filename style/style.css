@@ -18,13 +18,14 @@ body {
 .leftcolumn {
     float: left;
     width: 65%;
+    padding: 1%;
 }
 
 /* Right column */
 .rightcolumn {
     float: right;
     width: 30%;
-    padding: 2%;
+    padding: 1%;
 }
 
 .rightcolumn img {
