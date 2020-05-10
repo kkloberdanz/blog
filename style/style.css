@@ -17,19 +17,19 @@ body {
 /* Left column */
 .leftcolumn {
     float: left;
-    width: 75%;
+    width: 65%;
 }
 
 /* Right column */
 .rightcolumn {
     float: right;
-    width: 20%;
-    padding-right: 2%;
+    width: 30%;
+    padding: 2%;
 }
 
-.img {
+.rightcolumn img {
     background-color: #aaa;
-    padding: 5%;
+    width: 90%;
 }
 
 /* Add a card effect for articles */
