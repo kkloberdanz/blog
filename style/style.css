@@ -29,6 +29,11 @@ body {
     width: 90%;
 }
 
+.leftcolumn img {
+    background-color: #ffffff;
+    width: 90%;
+}
+
 .card {
     background-color: white;
     margin-top: 20px;
