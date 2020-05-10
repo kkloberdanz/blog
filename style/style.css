@@ -6,13 +6,15 @@ body {
 
 /* Header/Blog Title */
 .header {
-    padding: 2%;
-    width: 95%;
-    font-size: 40px;
+    padding-bottom: 52px;
+    padding-top: 12px;
+    margin-bottom: 20px;
+    width: 100%;
+    height: 32px;
+    font-size: 20px;
     text-align: center;
     background: white;
 }
-
 /* Create two unequal columns that floats next to each other */
 /* Left column */
 .leftcolumn {
