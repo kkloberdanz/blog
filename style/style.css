@@ -1,5 +1,6 @@
 body {
     font-family: sans-serif;
+    font-size: 20px;
     padding: 10px;
     background: #f1f1f1;
 }
@@ -45,6 +46,10 @@ img {
     text-align: center;
     background: #ddd;
     margin-top: 20px;
+}
+
+.foot-notes {
+    font-style: italic;
 }
 
 .codeblock {

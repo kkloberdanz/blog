@@ -28,7 +28,7 @@
     workloads where the amount of work per unit is about the same, static may
     be the best solution, because it has much less overhead than dynamic
     scheduling. Dynamic scheduling means that threads will get assigned work
-    from a work queue, and can get assigned more work if they finish early, and
+    from a work queue, and can get assigned more work if they finish early and
     there is more work to be done. This is great if you have a workload where
     each task may differ in the amount of time it takes to solve.
 </p>
@@ -82,14 +82,17 @@
 </div>
 
 <div class="codeblock">
-    $ clang -o single single.c -Wall -Wextra -Wpedantic -O2 -std=c89 -lm<br>
-    $ time ./single <br>
+    $ clang -o single single.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm<br>
+    $ time ./single<br>
     9223372036854775837 is prime<br>
     9223372036854775907 is prime<br>
+    9223372036854775931 is prime<br>
+    9223372036854775939 is prime<br>
+    9223372036854775963 is prime<br>
     <br>
-    real    0m47.980s<br>
-    user    0m47.979s<br>
-    sys     0m0.001s<br>
+    real    2m6.721s<br>
+    user    2m6.700s<br>
+    sys     0m0.008s<br>
 </div>
 
 <p>
@@ -101,7 +104,7 @@
     multithreaded. I simply added the <strong>pragma</strong> to tell openmp
     to parallelize this for loop, as well as a <strong>critical</strong>
     section to enforce that only a single thread can print at a time. This will
-    keep our messages from getting messed up.
+    keep our messages from colliding with each other
 </p>
 
 <div class="codeblock">
@@ -145,28 +148,30 @@
 </div>
 
 <div class="codeblock">
-    $ clang -o static static.c -fopenmp -Wall -Wextra -Wpedantic -O2 -std=c89 -lm<br>
-    $ time ./static<br>
+    $ clang -o static static.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm<br>
     9223372036854775837 is prime<br>
+    9223372036854775931 is prime<br>
+    9223372036854775963 is prime<br>
     9223372036854775907 is prime<br>
+    9223372036854775939 is prime<br>
     <br>
-    real    0m25.601s<br>
-    user    0m47.721s<br>
-    sys     0m0.024s<br>
+    real    0m55.687s<br>
+    user    2m14.791s<br>
+    sys     0m0.080s<br>
 </div>
 
 <p>
     That's a bit faster... but let's think about how the complexity of our prime
     algorithm works. If we start with the number <strong>96</strong>, then when
-    we apply our <strong>is_prime</strong> function, the first thing we divide it by is
-    <strong>2</strong>... which has a remander of <strong>0</strong>, and then
+    we apply our <strong>is_prime</strong> function, the first thing we divide by is
+    <strong>2</strong>... which has a remainder of <strong>0</strong>, and then
     we're done.<br>
 </p>
 <p>
     Next number, <strong>97</strong><br>
-    Let's try <strong>2</strong>? no<br>
-    <strong>3</strong>? no<br>
-    <strong>4</strong>? no<br>
+    Let's try <strong>2</strong>. Is the remainder <strong>0</strong>? no<br>
+    How about <strong>3</strong>? no<br>
+    Maybe <strong>4</strong>? no<br>
     <strong>5</strong>? no<br>
     <strong>6</strong>? no<br>
     <strong>7</strong>? no<br>
@@ -233,8 +238,26 @@
     </pre>
 </div>
 
+<div class="codeblock">
+    clang -o dynamic dynamic.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm<br>
+    time ./dynamic<br>
+    9223372036854775931 is prime<br>
+    9223372036854775837 is prime<br>
+    9223372036854775907 is prime<br>
+    9223372036854775939 is prime<br>
+    9223372036854775963 is prime<br>
+    <br>
+    real    0m46.493s<br>
+    user    2m7.142s<br>
+    sys     0m0.044s<br>
+</div>
+
 <p>
-    That's a pretty good speedup! And all we had to do was understand what kind
+    That's a pretty good speedup, considering all we had to do was understand what kind
     of work our algorithm was doing, and tweak how we use OMP with a single
     line change!
+</p>
+
+<p class="foot-notes">
+    * All benchmarks were run on a an i7-7600U dual core processor, running Ubuntu 18.04
 </p>
