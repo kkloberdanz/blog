@@ -20,51 +20,74 @@
 </p>
 
 <p>
-    Two of the most common scheduling types to use are
-    <ul>
-        <li>static</li>
-        <li>dynamic</li>
-    </ul>
+    Two of the most common scheduling types to use are <strong>static</strong>
+    and <strong>dynamic</strong>. Static scheduling means that each thread gets
+    assigned a chunk of work at the start of the parallel section. If a thread
+    finishes early, then it will stop executing and sit idle while the other
+    threads continue their work. This might sound extremely wasteful, but for
+    workloads where the amount of work per unit is about the same, static may
+    be the best solution, because it has much less overhead than dynamic
+    scheduling. Dynamic scheduling means that threads will get assigned work
+    from a work queue, and can get assigned more work if they finish early, and
+    there is more work to be done. This is great if you have a workload where
+    each task may differ in the amount of time it takes to solve.
+</p>
+
+<p>
+    Let's create some benchmarks to see when one scheduling type will be better
+    than the other. Below I have the base code that we will use. This is the
+    single threaded implementation of a program that will find the primes from
+    a range of numbers. The astute mathematicians reading this will note that
+    this is a very naïve algorithm for finding prime numbers, and I should
+    probably be using a <a href="https://en.wikipedia.org/wiki/Generation_of_primes#Prime_sieves">sieve</a>
+    for better performance. This is not a post about algorithm optimization,
+    however. I just need to simulate a workload that keeps my CPUs busy :)
 </p>
 
 <div class="codeblock">
-<pre>
-<font color="#AF5F00">  1 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdio.h&gt;</font>
-<font color="#AF5F00">  2 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdbool.h&gt;</font>
-<font color="#AF5F00">  3 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;math.h&gt;</font>
-<font color="#AF5F00">  4 </font>
-<font color="#AF5F00">  5 </font><font color="#4E9A06">bool</font> is_prime(<font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> n) {
-<font color="#AF5F00">  6 </font>    <font color="#AF5F00">if</font> (n &lt; <font color="#CC0000">2</font>) {
-<font color="#AF5F00">  7 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
-<font color="#AF5F00">  8 </font>    } <font color="#AF5F00">else</font> {
-<font color="#AF5F00">  9 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> max = sqrt(n) + <font color="#CC0000">1</font>;
-<font color="#AF5F00"> 10 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
-<font color="#AF5F00"> 11 </font>        <font color="#AF5F00">for</font> (i = <font color="#CC0000">2</font>; i &lt; max; i++) {
-<font color="#AF5F00"> 12 </font>            <font color="#AF5F00">if</font> (n % i == <font color="#CC0000">0</font>) {
-<font color="#AF5F00"> 13 </font>                <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
-<font color="#AF5F00"> 14 </font>            }
-<font color="#AF5F00"> 15 </font>        }
-<font color="#AF5F00"> 16 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">true</font>;
-<font color="#AF5F00"> 17 </font>    }
-<font color="#AF5F00"> 18 </font>}
-<font color="#AF5F00"> 19 </font>
-<font color="#AF5F00"> 20 </font><font color="#4E9A06">int</font> main(<font color="#4E9A06">void</font>) {
-<font color="#AF5F00"> 21 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> start = <font color="#CC0000">9223372036854775808UL</font>;
-<font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">100</font>;
-<font color="#AF5F00"> 23 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
-<font color="#AF5F00"> 24 </font>
-<font color="#AF5F00"> 25 </font>    <font color="#AF5F00">for</font> (i = start; i &lt; end; i++) {
-<font color="#AF5F00"> 26 </font>        printf(<font color="#CC0000">&quot;testing: </font><font color="#75507B">%lu\n</font><font color="#CC0000">&quot;</font>, i);
-<font color="#AF5F00"> 27 </font>        <font color="#AF5F00">if</font> (is_prime(i)) {
-<font color="#AF5F00"> 28 </font>            printf(<font color="#CC0000">&quot;</font><font color="#75507B">%lu</font><font color="#CC0000"> is prime</font><font color="#75507B">\n</font><font color="#CC0000">&quot;</font>, i);
-<font color="#AF5F00"> 29 </font>        }
-<font color="#AF5F00"> 30 </font>    }
-<font color="#AF5F00"> 31 </font>    <font color="#AF5F00">return</font> <font color="#CC0000">0</font>;
-<font color="#AF5F00"> 32 </font>}
-</pre>
+    <pre>
+    <font color="#AF5F00">  1 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdio.h&gt;</font>
+    <font color="#AF5F00">  2 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdbool.h&gt;</font>
+    <font color="#AF5F00">  3 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;math.h&gt;</font>
+    <font color="#AF5F00">  4 </font>
+    <font color="#AF5F00">  5 </font><font color="#4E9A06">bool</font> is_prime(<font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> n) {
+    <font color="#AF5F00">  6 </font>    <font color="#AF5F00">if</font> (n &lt; <font color="#CC0000">2</font>) {
+    <font color="#AF5F00">  7 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
+    <font color="#AF5F00">  8 </font>    } <font color="#AF5F00">else</font> {
+    <font color="#AF5F00">  9 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> max = sqrt(n) + <font color="#CC0000">1</font>;
+    <font color="#AF5F00"> 10 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
+    <font color="#AF5F00"> 11 </font>        <font color="#AF5F00">for</font> (i = <font color="#CC0000">2</font>; i &lt; max; i++) {
+    <font color="#AF5F00"> 12 </font>            <font color="#AF5F00">if</font> (n % i == <font color="#CC0000">0</font>) {
+    <font color="#AF5F00"> 13 </font>                <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
+    <font color="#AF5F00"> 14 </font>            }
+    <font color="#AF5F00"> 15 </font>        }
+    <font color="#AF5F00"> 16 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">true</font>;
+    <font color="#AF5F00"> 17 </font>    }
+    <font color="#AF5F00"> 18 </font>}
+    <font color="#AF5F00"> 19 </font>
+    <font color="#AF5F00"> 20 </font><font color="#4E9A06">int</font> main(<font color="#4E9A06">void</font>) {
+    <font color="#AF5F00"> 21 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> start = <font color="#CC0000">9223372036854775808UL</font>;
+    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">100</font>;
+    <font color="#AF5F00"> 23 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
+    <font color="#AF5F00"> 24 </font>
+    <font color="#AF5F00"> 25 </font>    <font color="#AF5F00">for</font> (i = start; i &lt; end; i++) {
+    <font color="#AF5F00"> 26 </font>        printf(<font color="#CC0000">&quot;testing: </font><font color="#75507B">%lu\n</font><font color="#CC0000">&quot;</font>, i);
+    <font color="#AF5F00"> 27 </font>        <font color="#AF5F00">if</font> (is_prime(i)) {
+    <font color="#AF5F00"> 28 </font>            printf(<font color="#CC0000">&quot;</font><font color="#75507B">%lu</font><font color="#CC0000"> is prime</font><font color="#75507B">\n</font><font color="#CC0000">&quot;</font>, i);
+    <font color="#AF5F00"> 29 </font>        }
+    <font color="#AF5F00"> 30 </font>    }
+    <font color="#AF5F00"> 31 </font>    <font color="#AF5F00">return</font> <font color="#CC0000">0</font>;
+    <font color="#AF5F00"> 32 </font>}
+    </pre>
 </div>
 
 <div class="codeblock">
-clang -o static static.c -Wall -Wextra -Wpedantic -O2 -std=c89 -lm<br>
-time ./static<br>
+    $ clang -o static static.c -Wall -Wextra -Wpedantic -O2 -std=c89 -lm<br>
+    $ time ./static <br>
+    9223372036854775837 is prime<br>
+    9223372036854775907 is prime<br>
+    <br>
+    real    0m47.980s<br>
+    user    0m47.979s<br>
+    sys     0m0.001s<br>
 </div>

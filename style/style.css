@@ -55,7 +55,9 @@ body {
 
 .codeblock {
     font-family: monospace;
-    font-size: 20px;
+    color: #d3d7cf;
+    font-size: 16px;
+    background: #2e3436;
 }
 
 @media screen and (max-width: 960px) {

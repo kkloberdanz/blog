@@ -23,7 +23,6 @@ int main(void) {
     unsigned long i;
 
     for (i = start; i < end; i++) {
-        printf("testing: %lu\n", i);
         if (is_prime(i)) {
             printf("%lu is prime\n", i);
         }
