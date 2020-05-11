@@ -32,7 +32,8 @@ def get_posttitle(filename):
 def populate_links(names):
     l = []
     for postname, postfile in names:
-        s = f'<li><a href="{postfile}">{postname}</a></li>'
+        dt = postfile.split('.')[0]
+        s = f'<li><a href="{postfile}">[{dt}] {postname}</a></li>'
         l.append(s)
     return '\n'.join(l)
 

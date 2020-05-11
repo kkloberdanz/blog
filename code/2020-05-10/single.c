@@ -22,13 +22,9 @@ int main(void) {
     unsigned long end = start + 200;
     unsigned long i;
 
-    #pragma omp parallel for schedule(static)
     for (i = start; i < end; i++) {
         if (is_prime(i)) {
-            #pragma omp critical
-            {
-                printf("%lu is prime\n", i);
-            }
+            printf("%lu is prime\n", i);
         }
     }
     return 0;
