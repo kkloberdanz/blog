@@ -67,7 +67,7 @@
     <font color="#AF5F00"> 19 </font>
     <font color="#AF5F00"> 20 </font><font color="#4E9A06">int</font> main(<font color="#4E9A06">void</font>) {
     <font color="#AF5F00"> 21 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> start = <font color="#CC0000">9223372036854775808UL</font>;
-    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">200</font>;
+    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">1000</font>;
     <font color="#AF5F00"> 23 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
     <font color="#AF5F00"> 24 </font>
     <font color="#AF5F00"> 25 </font>    <font color="#AF5F00">for</font> (i = start; i &lt; end; i++) {
@@ -89,10 +89,27 @@
     9223372036854775931 is prime<br>
     9223372036854775939 is prime<br>
     9223372036854775963 is prime<br>
+    9223372036854776063 is prime<br>
+    9223372036854776077 is prime<br>
+    9223372036854776167 is prime<br>
+    9223372036854776243 is prime<br>
+    9223372036854776257 is prime<br>
+    9223372036854776261 is prime<br>
+    9223372036854776293 is prime<br>
+    9223372036854776299 is prime<br>
+    9223372036854776351 is prime<br>
+    9223372036854776393 is prime<br>
+    9223372036854776407 is prime<br>
+    9223372036854776561 is prime<br>
+    9223372036854776657 is prime<br>
+    9223372036854776687 is prime<br>
+    9223372036854776693 is prime<br>
+    9223372036854776711 is prime<br>
+    9223372036854776803 is prime<br>
     <br>
-    real    2m6.721s<br>
-    user    2m6.700s<br>
-    sys     0m0.008s<br>
+    real	10m28.951s<br>
+    user	10m28.739s<br>
+    sys	0m0.020s<br>
 </div>
 
 <h4>
@@ -130,7 +147,7 @@
     <font color="#AF5F00"> 19 </font>
     <font color="#AF5F00"> 20 </font><font color="#4E9A06">int</font> main(<font color="#4E9A06">void</font>) {
     <font color="#AF5F00"> 21 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> start = <font color="#CC0000">9223372036854775808UL</font>;
-    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">200</font>;
+    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">1000</font>;
     <font color="#AF5F00"> 23 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
     <font color="#AF5F00"> 24 </font>
     <font color="#AF5F00"> 25 </font>    <font color="#75507B">#pragma omp parallel </font><font color="#AF5F00">for</font><font color="#75507B"> schedule(</font><font color="#4E9A06">static</font><font color="#75507B">)</font>
@@ -149,23 +166,40 @@
 
 <div class="codeblock">
     $ clang -o static static.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm<br>
+    9223372036854776351 is prime<br>
     9223372036854775837 is prime<br>
-    9223372036854775931 is prime<br>
-    9223372036854775963 is prime<br>
-    9223372036854775907 is prime<br>
     9223372036854775939 is prime<br>
+    9223372036854776063 is prime<br>
+    9223372036854776167 is prime<br>
+    9223372036854776657 is prime<br>
+    9223372036854776561 is prime<br>
+    9223372036854776393 is prime<br>
+    9223372036854776687 is prime<br>
+    9223372036854776257 is prime<br>
+    9223372036854776803 is prime<br>
+    9223372036854775907 is prime<br>
+    9223372036854776243 is prime<br>
+    9223372036854775963 is prime<br>
+    9223372036854776077 is prime<br>
+    9223372036854776407 is prime<br>
+    9223372036854776693 is prime<br>
+    9223372036854776261 is prime<br>
+    9223372036854775931 is prime<br>
+    9223372036854776711 is prime<br>
+    9223372036854776293 is prime<br>
+    9223372036854776299 is prime<br>
     <br>
-    real    0m55.687s<br>
-    user    2m14.791s<br>
-    sys     0m0.080s<br>
+    real    2m14.245s<br>
+    user    15m17.936s<br>
+    sys     0m0.212s<br>
 </div>
 
 <p>
-    That's a bit faster... but let's think about how the complexity of our prime
-    algorithm works. If we start with the number <strong>96</strong>, then when
-    we apply our <strong>is_prime</strong> function, the first thing we divide by is
-    <strong>2</strong>... which has a remainder of <strong>0</strong>, and then
-    we're done.<br>
+    That's a quite a bit bit faster... but let's think about how the complexity
+    of our prime algorithm works. If we start with the number
+    <strong>96</strong>, then when we apply our <strong>is_prime</strong>
+    function, the first thing we divide by is <strong>2</strong>... which has a
+    remainder of <strong>0</strong>, and then we're done.<br>
 </p>
 <p>
     Next number, <strong>97</strong><br>
@@ -221,7 +255,7 @@
     <font color="#AF5F00"> 19 </font>
     <font color="#AF5F00"> 20 </font><font color="#4E9A06">int</font> main(<font color="#4E9A06">void</font>) {
     <font color="#AF5F00"> 21 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> start = <font color="#CC0000">9223372036854775808UL</font>;
-    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">200</font>;
+    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">1000</font>;
     <font color="#AF5F00"> 23 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
     <font color="#AF5F00"> 24 </font>
     <font color="#AF5F00"> 25 </font>    <font color="#75507B">#pragma omp parallel </font><font color="#AF5F00">for</font><font color="#75507B"> schedule(dynamic)</font>
@@ -241,15 +275,32 @@
 <div class="codeblock">
     clang -o dynamic dynamic.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm<br>
     time ./dynamic<br>
-    9223372036854775931 is prime<br>
-    9223372036854775837 is prime<br>
-    9223372036854775907 is prime<br>
     9223372036854775939 is prime<br>
+    9223372036854775931 is prime<br>
+    9223372036854776167 is prime<br>
+    9223372036854776063 is prime<br>
+    9223372036854776257 is prime<br>
+    9223372036854776077 is prime<br>
     9223372036854775963 is prime<br>
+    9223372036854775907 is prime<br>
+    9223372036854776243 is prime<br>
+    9223372036854775837 is prime<br>
+    9223372036854776261 is prime<br>
+    9223372036854776293 is prime<br>
+    9223372036854776299 is prime<br>
+    9223372036854776407 is prime<br>
+    9223372036854776393 is prime<br>
+    9223372036854776711 is prime<br>
+    9223372036854776351 is prime<br>
+    9223372036854776687 is prime<br>
+    9223372036854776693 is prime<br>
+    9223372036854776657 is prime<br>
+    9223372036854776803 is prime<br>
+    9223372036854776561 is prime<br>
     <br>
-    real    0m46.493s<br>
-    user    2m7.142s<br>
-    sys     0m0.044s<br>
+    real    1m24.828s<br>
+    user    18m10.744s<br>
+    sys     0m0.436s<br>
 </div>
 
 <p>
@@ -259,5 +310,5 @@
 </p>
 
 <p class="foot-notes">
-    * All benchmarks were run on a an i7-7600U dual core processor, running Ubuntu 18.04
+    * All benchmarks were run on a an AMD Ryzen 7 2700X Eight-Core Processor, running Ubuntu 18.04
 </p>
