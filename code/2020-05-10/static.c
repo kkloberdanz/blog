@@ -19,7 +19,7 @@ bool is_prime(unsigned long n) {
 
 int main(void) {
     unsigned long start = 9223372036854775808UL;
-    unsigned long end = start + 200;
+    unsigned long end = start + 1000;
     unsigned long i;
 
     #pragma omp parallel for schedule(static)
