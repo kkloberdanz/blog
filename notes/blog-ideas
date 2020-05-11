@@ -5,7 +5,7 @@
 5) Switch and Jump Tables
 6) Bit masking vs Modulo
 7) Let's build a Lisp interpreter in Rust!
-8) OpenMP - Static or Dynamic Scheduling?
+[DONE] 8) OpenMP - Static or Dynamic Scheduling?
 9) Where should I parallelize?
 10) C Preprocessor token pasting, and making the STL for C
 11) Hand coded SIMD vs Numpy
