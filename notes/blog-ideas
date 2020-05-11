@@ -1,0 +1,12 @@
+1) Design document for the Boa programming language
+2) Speed up Python by rewriting the bottlenecks in Rust
+3) Linked List vs Vector (C++)
+4) What is polymorphism?
+5) Switch and Jump Tables
+6) Bit masking vs Modulo
+7) Let's build a Lisp interpreter in Rust!
+8) OpenMP - Static or Dynamic Scheduling?
+9) Where should I parallelize?
+10) C Preprocessor token pasting, and making the STL for C
+11) Hand coded SIMD vs Numpy
+12) Hand coded SIMD vs -ffast-math

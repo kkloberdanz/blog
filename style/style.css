@@ -53,6 +53,11 @@ body {
     margin-top: 20px;
 }
 
+.codeblock {
+    font-family: monospace;
+    font-size: 20px;
+}
+
 @media screen and (max-width: 960px) {
     .leftcolumn {
         width: 100%;
