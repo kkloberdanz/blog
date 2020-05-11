@@ -54,13 +54,25 @@ img {
 
 .codeblock {
     font-family: monospace;
-    color: #d3d7cf;
+    color: #ddd;
     font-size: 16px;
     background: #2e3436;
     border: 10px solid grey;
     margin: 10px;
     padding: 10px;
     overflow-x: scroll;
+}
+
+.quote {
+    font-style: italic;
+    text-indent: 5%;
+    padding: 5px;
+    margin-top: 5px;
+    background: #ddd;
+}
+
+.indent {
+    text-indent: 5%;
 }
 
 @media screen and (max-width: 1024px) {
