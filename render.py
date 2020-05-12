@@ -55,16 +55,10 @@ if __name__ == '__main__':
     if post_index <= 0:
         raise Exception('could not find post start')
 
-    to_render = [
+    to_render = sorted((
         fname
         for fname in os.listdir('templates')
-        if fname != 'template.html'
-    ]
-
-    posts = sorted((
-        f'{post}.html'
-        for fname in to_render
-        for post in [fname.split('.')[0]]),
+        if fname != 'template.html'),
         reverse=True
     )
 

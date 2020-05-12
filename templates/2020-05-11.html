@@ -5,7 +5,7 @@
 <p>
     I'm a <strong>BIG</strong> advocate of
     <a href="https://www.rust-lang.org/">Rust</a>. I'm sure you are tired of
-    hearing all the soapbox speeches, so I'll just move on to the task at
+    hearing the soapbox speeches, so I'll just move on to the task at
     hand...
 </p>
 
@@ -127,7 +127,7 @@
 
 <p>
     First things first, we need to create the project using the cargo program
-    that comes bundled with Rust If you do not have rust installed already,
+    that comes bundled with Rust. If you do not have Rust installed already,
     you can get it
     <a href="https://www.rust-lang.org/tools/install">here</a>
 </p>
@@ -234,6 +234,147 @@ num-traits =<font color="#CC0000"> &quot;0.2&quot;</font>
     reads in a string, and returns the appropriate kind of token for that
     string.
 </p>
+
+<div class="codeblock">
+<pre>
+<font color="#AF5F00">fn</font> <font color="#06989A">to_token</font>(s: <font color="#4E9A06">&amp;String</font>) <font color="#AF5F00">-&gt;</font> Token {
+    <font color="#AF5F00">let</font> bytes <font color="#AF5F00">=</font> s.<font color="#06989A">as_bytes</font>();
+    <font color="#AF5F00">if</font> <font color="#AF5F00">let</font> <font color="#CC0000">Some</font>(t) <font color="#AF5F00">=</font> <font color="#75507B">BigInt::</font><font color="#06989A">parse_bytes</font>(bytes, <font color="#CC0000">10</font>) {
+        <font color="#75507B">Token::</font><font color="#06989A">Int</font>(t)
+    } <font color="#AF5F00">else</font> <font color="#AF5F00">if</font> <font color="#AF5F00">let</font> <font color="#CC0000">Ok</font>(t) <font color="#AF5F00">=</font> s.<font color="#06989A">parse</font><font color="#75507B">::</font><font color="#AF5F00">&lt;</font><font color="#4E9A06">f64</font><font color="#AF5F00">&gt;</font>() {
+        <font color="#75507B">Token::</font><font color="#06989A">Dec</font>(t)
+    } <font color="#AF5F00">else</font> <font color="#AF5F00">if</font> <font color="#AF5F00">let</font> <font color="#CC0000">Ok</font>(t) <font color="#AF5F00">=</font> s.<font color="#06989A">parse</font><font color="#75507B">::</font><font color="#AF5F00">&lt;</font><font color="#4E9A06">bool</font><font color="#AF5F00">&gt;</font>() {
+        <font color="#75507B">Token::</font><font color="#06989A">Bool</font>(t)
+    } <font color="#AF5F00">else</font> {
+        <font color="#AF5F00">match</font> s.<font color="#06989A">as_ref</font>() {
+            <font color="#CC0000">&quot;(&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Lparen,
+            <font color="#CC0000">&quot;)&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Rparen,
+            <font color="#CC0000">&quot;+&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Plus,
+            <font color="#CC0000">&quot;-&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Minus,
+            <font color="#CC0000">&quot;*&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Times,
+            <font color="#CC0000">&quot;/&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Slash,
+            <font color="#CC0000">&quot;%&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Percent,
+            <font color="#CC0000">&quot;pow&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Pow,
+            <font color="#CC0000">&quot;&lt;&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Lt,
+            <font color="#CC0000">&quot;&gt;&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Gt,
+            <font color="#CC0000">&quot;=&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font><font color="#4E9A06">Eq</font>,
+            <font color="#CC0000">&quot;&gt;=&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Gte,
+            <font color="#CC0000">&quot;&lt;=&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Lte,
+            <font color="#CC0000">&quot;let&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Let,
+            <font color="#CC0000">&quot;def&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Def,
+            <font color="#CC0000">&quot;list&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>List,
+            <font color="#CC0000">&quot;take&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Take,
+            <font color="#CC0000">&quot;if&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>If,
+            <font color="#CC0000">&quot;index&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Index,
+            <font color="#CC0000">&quot;drop&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font><font color="#4E9A06">Drop</font>,
+            <font color="#CC0000">&quot;quote&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Quote,
+            <font color="#CC0000">&quot;append&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Append,
+            <font color="#CC0000">&quot;range&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Range,
+            <font color="#CC0000">&quot;cat&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Cat,
+            <font color="#CC0000">&quot;len&quot;</font> <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font>Len,
+            _ <font color="#AF5F00">=&gt;</font> <font color="#75507B">Token::</font><font color="#06989A">Id</font>(s.<font color="#06989A">to_string</font>()),
+        }
+    }
+}
+</pre>
+</div>
+
+<p>
+    Let's test out this code in main, and give it some example tokens.
+</p>
+
+<div class="codeblock">
+<pre>
+<font color="#AF5F00">fn</font> <font color="#06989A">main</font>() {
+    <font color="#75507B">println!</font>(<font color="#CC0000">&quot;{:?}&quot;</font>, <font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;</font><font color="#CC0000">&quot;(&quot;</font>.<font color="#06989A">to_string</font>()));
+    <font color="#75507B">println!</font>(<font color="#CC0000">&quot;{:?}&quot;</font>, <font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;</font><font color="#CC0000">&quot;)&quot;</font>.<font color="#06989A">to_string</font>()));
+    <font color="#75507B">println!</font>(<font color="#CC0000">&quot;{:?}&quot;</font>, <font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;</font><font color="#CC0000">&quot;def&quot;</font>.<font color="#06989A">to_string</font>()));
+    <font color="#75507B">println!</font>(<font color="#CC0000">&quot;{:?}&quot;</font>, <font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;</font><font color="#CC0000">&quot;+&quot;</font>.<font color="#06989A">to_string</font>()));
+    <font color="#75507B">println!</font>(<font color="#CC0000">&quot;{:?}&quot;</font>, <font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;</font><font color="#CC0000">&quot;myfunc&quot;</font>.<font color="#06989A">to_string</font>()));
+    <font color="#75507B">println!</font>(<font color="#CC0000">&quot;{:?}&quot;</font>, <font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;</font><font color="#CC0000">&quot;myvar&quot;</font>.<font color="#06989A">to_string</font>()));
+    <font color="#75507B">println!</font>(<font color="#CC0000">&quot;{:?}&quot;</font>, <font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;</font><font color="#CC0000">&quot;3.14&quot;</font>.<font color="#06989A">to_string</font>()));
+    <font color="#75507B">println!</font>(<font color="#CC0000">&quot;{:?}&quot;</font>, <font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;</font><font color="#CC0000">&quot;42&quot;</font>.<font color="#06989A">to_string</font>()));
+}
+</pre>
+</div>
+
+<p>
+    When we run it
+</p>
+
+<div class="codeblock">
+<pre>
+$ cargo run
+<font color="#8AE234"><b>    Finished</b></font> dev [unoptimized + debuginfo] target(s) in 0.55s
+<font color="#8AE234"><b>     Running</b></font> `target/debug/stutter`
+Lparen
+Rparen
+Def
+Id("myfunc")
+Id("myvar")
+Dec(3.14)
+Int(BigInt { sign: Plus, data: BigUint { data: [42] } })
+</pre>
+</div>
+
+<p>
+    Looks good! Now we need a function that can take a string and split it into
+    each individual token.
+</p>
+
+<div class="codeblock">
+<pre>
+<font color="#AF5F00">fn</font> <font color="#06989A">lex</font>(cmd: <font color="#4E9A06">&amp;String</font>) <font color="#AF5F00">-&gt;</font> <font color="#4E9A06">Result</font><font color="#AF5F00">&lt;</font><font color="#4E9A06">Vec</font><font color="#AF5F00">&lt;</font>Token<font color="#AF5F00">&gt;</font>, <font color="#4E9A06">String</font><font color="#AF5F00">&gt;</font> {
+    <font color="#AF5F00">let</font> <font color="#4E9A06">mut</font> tokens <font color="#AF5F00">=</font> <font color="#4E9A06">Vec</font><font color="#75507B">::</font><font color="#06989A">new</font>();
+    <font color="#AF5F00">let</font> <font color="#4E9A06">mut</font> tok <font color="#AF5F00">=</font> <font color="#4E9A06">String</font><font color="#75507B">::</font><font color="#06989A">new</font>();
+    <font color="#AF5F00">let</font> <font color="#4E9A06">mut</font> in_comment <font color="#AF5F00">=</font> <font color="#CC0000">false</font>;
+    <font color="#AF5F00">for</font> c <font color="#AF5F00">in</font> cmd.<font color="#06989A">chars</font>() {
+        <font color="#AF5F00">if</font> in_comment {
+            <font color="#AF5F00">continue</font>;
+        }
+        <font color="#AF5F00">match</font> c {
+            <font color="#CC0000">&apos;;&apos;</font> <font color="#AF5F00">=&gt;</font> in_comment <font color="#AF5F00">=</font> <font color="#CC0000">true</font>,
+
+            <font color="#CC0000">&apos;</font><font color="#75507B">\n</font><font color="#CC0000">&apos;</font> <font color="#AF5F00">=&gt;</font> in_comment <font color="#AF5F00">=</font> <font color="#CC0000">false</font>,
+
+            <font color="#CC0000">&apos;)&apos;</font> <font color="#AF5F00">=&gt;</font> {
+                <font color="#AF5F00">if</font> tok.<font color="#06989A">len</font>() <font color="#AF5F00">&gt;</font> <font color="#CC0000">0</font> {
+                    tokens.<font color="#06989A">push</font>(<font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;</font>tok));
+                    tok <font color="#AF5F00">=</font> <font color="#4E9A06">String</font><font color="#75507B">::</font><font color="#06989A">new</font>();
+                }
+                tokens.<font color="#06989A">push</font>(<font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;String</font><font color="#75507B">::</font><font color="#06989A">from</font>(<font color="#CC0000">&quot;)&quot;</font>)));
+            }
+
+            <font color="#CC0000">&apos;(&apos;</font> <font color="#AF5F00">=&gt;</font> {
+                <font color="#AF5F00">if</font> tok.<font color="#06989A">len</font>() <font color="#AF5F00">&gt;</font> <font color="#CC0000">0</font> {
+                    tokens.<font color="#06989A">push</font>(<font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;</font>tok));
+                    tok <font color="#AF5F00">=</font> <font color="#4E9A06">String</font><font color="#75507B">::</font><font color="#06989A">new</font>();
+                }
+                tokens.<font color="#06989A">push</font>(<font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;String</font><font color="#75507B">::</font><font color="#06989A">from</font>(<font color="#CC0000">&quot;(&quot;</font>)));
+            }
+
+            <font color="#CC0000">&apos; &apos;</font> <font color="#AF5F00">=&gt;</font> {
+                <font color="#AF5F00">if</font> tok.<font color="#06989A">len</font>() <font color="#AF5F00">&gt;</font> <font color="#CC0000">0</font> {
+                    tokens.<font color="#06989A">push</font>(<font color="#06989A">to_token</font>(<font color="#4E9A06">&amp;</font>tok));
+                    tok <font color="#AF5F00">=</font> <font color="#4E9A06">String</font><font color="#75507B">::</font><font color="#06989A">new</font>();
+                }
+            }
+
+            _ <font color="#AF5F00">=&gt;</font> {
+                tok.<font color="#06989A">push</font>(c);
+            }
+        }
+    }
+
+    <font color="#AF5F00">if</font> tok.<font color="#06989A">len</font>() <font color="#AF5F00">&gt;</font> <font color="#CC0000">0</font> {
+        <font color="#CC0000">Err</font>(<font color="#75507B">format!</font>(<font color="#CC0000">&quot;Invalid syntax, token not matched: {:?}&quot;</font>, tok))
+    } <font color="#AF5F00">else</font> {
+        <font color="#CC0000">Ok</font>(tokens)
+    }
+}
+
+</pre>
+</div>
 
 <h4>
     Stay tuned for part 2 where I will go through parsing
