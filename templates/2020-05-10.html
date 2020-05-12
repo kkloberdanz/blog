@@ -82,34 +82,36 @@
 </div>
 
 <div class="codeblock">
-    $ clang -o single single.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm<br>
-    $ time ./single<br>
-    9223372036854775837 is prime<br>
-    9223372036854775907 is prime<br>
-    9223372036854775931 is prime<br>
-    9223372036854775939 is prime<br>
-    9223372036854775963 is prime<br>
-    9223372036854776063 is prime<br>
-    9223372036854776077 is prime<br>
-    9223372036854776167 is prime<br>
-    9223372036854776243 is prime<br>
-    9223372036854776257 is prime<br>
-    9223372036854776261 is prime<br>
-    9223372036854776293 is prime<br>
-    9223372036854776299 is prime<br>
-    9223372036854776351 is prime<br>
-    9223372036854776393 is prime<br>
-    9223372036854776407 is prime<br>
-    9223372036854776561 is prime<br>
-    9223372036854776657 is prime<br>
-    9223372036854776687 is prime<br>
-    9223372036854776693 is prime<br>
-    9223372036854776711 is prime<br>
-    9223372036854776803 is prime<br>
-    <br>
-    real	10m28.951s<br>
-    user	10m28.739s<br>
-    sys	0m0.020s<br>
+    <pre>
+    $ clang -o single single.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm
+    $ time ./single
+    9223372036854775837 is prime
+    9223372036854775907 is prime
+    9223372036854775931 is prime
+    9223372036854775939 is prime
+    9223372036854775963 is prime
+    9223372036854776063 is prime
+    9223372036854776077 is prime
+    9223372036854776167 is prime
+    9223372036854776243 is prime
+    9223372036854776257 is prime
+    9223372036854776261 is prime
+    9223372036854776293 is prime
+    9223372036854776299 is prime
+    9223372036854776351 is prime
+    9223372036854776393 is prime
+    9223372036854776407 is prime
+    9223372036854776561 is prime
+    9223372036854776657 is prime
+    9223372036854776687 is prime
+    9223372036854776693 is prime
+    9223372036854776711 is prime
+    9223372036854776803 is prime
+    
+    real    10m28.951s
+    user    10m28.739s
+    sys     0m0.020s
+    </pre>
 </div>
 
 <h4>
@@ -165,33 +167,35 @@
 </div>
 
 <div class="codeblock">
-    $ clang -o static static.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm<br>
-    9223372036854776351 is prime<br>
-    9223372036854775837 is prime<br>
-    9223372036854775939 is prime<br>
-    9223372036854776063 is prime<br>
-    9223372036854776167 is prime<br>
-    9223372036854776657 is prime<br>
-    9223372036854776561 is prime<br>
-    9223372036854776393 is prime<br>
-    9223372036854776687 is prime<br>
-    9223372036854776257 is prime<br>
-    9223372036854776803 is prime<br>
-    9223372036854775907 is prime<br>
-    9223372036854776243 is prime<br>
-    9223372036854775963 is prime<br>
-    9223372036854776077 is prime<br>
-    9223372036854776407 is prime<br>
-    9223372036854776693 is prime<br>
-    9223372036854776261 is prime<br>
-    9223372036854775931 is prime<br>
-    9223372036854776711 is prime<br>
-    9223372036854776293 is prime<br>
-    9223372036854776299 is prime<br>
-    <br>
-    real    2m14.245s<br>
-    user    15m17.936s<br>
-    sys     0m0.212s<br>
+    <pre>
+    $ clang -o static static.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm
+    9223372036854776351 is prime
+    9223372036854775837 is prime
+    9223372036854775939 is prime
+    9223372036854776063 is prime
+    9223372036854776167 is prime
+    9223372036854776657 is prime
+    9223372036854776561 is prime
+    9223372036854776393 is prime
+    9223372036854776687 is prime
+    9223372036854776257 is prime
+    9223372036854776803 is prime
+    9223372036854775907 is prime
+    9223372036854776243 is prime
+    9223372036854775963 is prime
+    9223372036854776077 is prime
+    9223372036854776407 is prime
+    9223372036854776693 is prime
+    9223372036854776261 is prime
+    9223372036854775931 is prime
+    9223372036854776711 is prime
+    9223372036854776293 is prime
+    9223372036854776299 is prime
+    
+    real    2m14.245s
+    user    15m17.936s
+    sys     0m0.212s
+    </pre>
 </div>
 
 <p>
@@ -273,34 +277,36 @@
 </div>
 
 <div class="codeblock">
-    clang -o dynamic dynamic.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm<br>
-    time ./dynamic<br>
-    9223372036854775939 is prime<br>
-    9223372036854775931 is prime<br>
-    9223372036854776167 is prime<br>
-    9223372036854776063 is prime<br>
-    9223372036854776257 is prime<br>
-    9223372036854776077 is prime<br>
-    9223372036854775963 is prime<br>
-    9223372036854775907 is prime<br>
-    9223372036854776243 is prime<br>
-    9223372036854775837 is prime<br>
-    9223372036854776261 is prime<br>
-    9223372036854776293 is prime<br>
-    9223372036854776299 is prime<br>
-    9223372036854776407 is prime<br>
-    9223372036854776393 is prime<br>
-    9223372036854776711 is prime<br>
-    9223372036854776351 is prime<br>
-    9223372036854776687 is prime<br>
-    9223372036854776693 is prime<br>
-    9223372036854776657 is prime<br>
-    9223372036854776803 is prime<br>
-    9223372036854776561 is prime<br>
-    <br>
-    real    1m24.828s<br>
-    user    18m10.744s<br>
-    sys     0m0.436s<br>
+    <pre>
+    clang -o dynamic dynamic.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm
+    time ./dynamic
+    9223372036854775939 is prime
+    9223372036854775931 is prime
+    9223372036854776167 is prime
+    9223372036854776063 is prime
+    9223372036854776257 is prime
+    9223372036854776077 is prime
+    9223372036854775963 is prime
+    9223372036854775907 is prime
+    9223372036854776243 is prime
+    9223372036854775837 is prime
+    9223372036854776261 is prime
+    9223372036854776293 is prime
+    9223372036854776299 is prime
+    9223372036854776407 is prime
+    9223372036854776393 is prime
+    9223372036854776711 is prime
+    9223372036854776351 is prime
+    9223372036854776687 is prime
+    9223372036854776693 is prime
+    9223372036854776657 is prime
+    9223372036854776803 is prime
+    9223372036854776561 is prime
+    
+    real    1m24.828s
+    user    18m10.744s
+    sys     0m0.436s
+    </pre>
 </div>
 
 <p>

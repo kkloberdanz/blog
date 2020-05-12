@@ -48,7 +48,7 @@ if __name__ == '__main__':
             print(f'post index = {post_index}')
         elif line.strip() == '!LINKS!':
             links_index = i
-            print(f'links index = {post_index}')
+            print(f'links index = {links_index}')
         if post_index and links_index:
             break
 
@@ -69,8 +69,10 @@ if __name__ == '__main__':
     )
 
     names = [
-        (get_posttitle(os.path.join('templates', post)), post)
+        (title, post)
         for post in to_render
+        for title in [get_posttitle(os.path.join('templates', post))]
+        if title is not None
     ]
 
     print('rendering:', names)

@@ -1,4 +1,4 @@
-<h2 class="posttitle">Let's build a Lisp interpreter in Rust!</h2>
+<h2 class="posttitle">Let's build a Lisp interpreter in Rust! (Part 1 - Lexing)</h2>
 <h5>11 May 2020</h5>
 <img class="img" src="image/sin-small.svg" />
 
@@ -10,16 +10,23 @@
 </p>
 
 <h4>
-    Let's build a Lisp interpreter!
+    Building a Lisp interpreter
 </h4>
 
 <p>
-    First, we need to define the basics. What is an interpreter?
+    Many interpreters rely on external tooling, such as parser generators.
+    In this tutorial, we will learn things the hard way by coding everything
+    by hand!
+</p>
+
+<p>
+    But before we get to that, we need to define the basics.
+    What is an interpreter?
 </p>
 
 <p class="quote">
     An interpreter is a program that reads text, then executes that text as
-    another program.
+    a program.
 </p>
 
 <p>
@@ -27,20 +34,24 @@
     goes a step further. They translate the text from one programming language
     into another language. Commonly, compilers translate the text of a high
     level language, such as Rust, into the machine code that a computer can
-    execute. Compilers can have different targets other than machine code. Java,
+    execute. Compilers can have targets other than machine code. Java,
     for example, translates Java code into code that a virtual machine called
     the JVM can execute. TypeScript utilizes a compiler that translates
     TypeScript code into JavaScript, which is then translated into byte code for
-    your browsers JavaScript virtual machine (V8 for Chrome, or SpiderMonkey for
+    your browser's JavaScript virtual machine (V8 for Chrome, or SpiderMonkey for
     Firefox).
 </p>
 
 <p>
     Interpreters and compilers share several things in common. If you build an
-    interpreter, you are about half way to having a compiler. Compilers are
-    implemented in two major parts, commonly referred to as the frontend and
-    backend. The frontend is responsible for dealing with text, while the
-    backend is responsible for generating the output code. Each of these parts
+    interpreter, you are about half way to having a compiler.
+    
+</p>
+<p>
+    Compilers are
+    implemented in two major parts, commonly referred to as the front end and
+    back end. The front end is responsible for dealing with text, while the
+    back end is responsible for generating the output code. Each of these parts
     are composed of smaller parts, which commonly looks something like this.
 </p>
 
@@ -57,3 +68,173 @@
         <li>Code Generation</li>
     </ul></ul></ul>
 </p>
+
+<h4>
+    Lexing
+</h4>
+
+<p>
+    The lexer or <i>tokenizer</i> is responsible for taking a string of text,
+    and converting it into tokens, which are the smallest elements of a program
+    that carry some amount of meaning. Tokens in a formal language, are the
+    equivalent of words in a natural language. Take this sentence for instance.
+    <p class="quote">How now brown cow?</p>
+    If you ran this sentence through a lexer, you would get the list of words
+    <p class="quote">["How", "now", "brown", "cow", "?"]</p>
+</p>
+
+<p>
+    Let's take a look at this C program below, and see what would happen
+    if we tokenized it.
+</p>
+
+<div class="codeblock">
+<pre>
+    <font color="#AF5F00">  1 </font><font color="#4E9A06">int</font> gcd(<font color="#4E9A06">int</font> a, <font color="#4E9A06">int</font> b) {
+    <font color="#AF5F00">  2 </font>    <font color="#AF5F00">if</font> (b == <font color="#CC0000">0</font>) {
+    <font color="#AF5F00">  3 </font>        <font color="#AF5F00">return</font> a;
+    <font color="#AF5F00">  4 </font>    } <font color="#AF5F00">else</font> {
+    <font color="#AF5F00">  5 </font>        <font color="#AF5F00">return</font> gcd(b, a % b);
+    <font color="#AF5F00">  6 </font>    }
+    <font color="#AF5F00">  7 </font>}</pre>
+</div>
+
+<p class="quote">
+    ["int", "gcd", "(", "int", "a", ",", "int", "b", ")", "{",...]
+</p>
+
+<p>
+    Let's begin looking at the syntax that we will write a parser for. This
+    tutorial will be making a Lisp like programming language. Since Lisp 
+    (<i><strong>Lis</strong>t <strong>P</strong>rocessor</i>) is also the name
+    of a speech impediment... in that spirit, let's call this language
+    <i>Stutter</i>!
+</p>
+
+<p>
+    Here we can see the <a href="https://en.wikipedia.org/wiki/Greatest_common_divisor#Euclid's_algorithm">GCD</a>
+    function from before, but now implemented in Stutter.
+</p>
+
+<div class="codeblock">
+    <pre>
+    <font color="#AF5F00">  1 </font><font color="#75507B">(</font>def <font color="#AF5F00">gcd</font>
+    <font color="#AF5F00">  2 </font>  <font color="#75507B">(</font><font color="#AF5F00">lambda</font> <font color="#75507B">(</font>a b<font color="#75507B">)</font>
+    <font color="#AF5F00">  3 </font>    <font color="#75507B">(</font><font color="#AF5F00">if</font> <font color="#75507B">(</font><font color="#AF5F00">=</font> <font color="#CC0000">0</font> b<font color="#75507B">)</font>
+    <font color="#AF5F00">  4 </font>      a
+    <font color="#AF5F00">  5 </font>      <font color="#75507B">(</font><font color="#AF5F00">gcd</font> b <font color="#75507B">(</font><font color="#AF5F00">mod</font> a b<font color="#75507B">)))))</font></pre>
+</div>
+
+<p>
+    First things first, we need to create the project using the cargo program
+    that comes bundled with Rust If you do not have rust installed already,
+    you can get it
+    <a href="https://www.rust-lang.org/tools/install">here</a>
+</p>
+
+<div class="codeblock">
+    <pre>
+    $ cargo new stutter --bin
+    <font color="#8AE234"><b>     Created</b></font> binary (application) `stutter` package
+    </pre>
+</div>
+
+<p>
+    Since this program won't be very long, for now let's write all the code in
+    <i>main.rs</i>
+</p>
+
+<p>
+    We need to have a way to represent each token within Rust. This is a
+    perfect place to use an enum. We'll create an enum called Token that can 
+    be used to represent every possible construct within our programming
+    language.
+</p>
+
+<div class="codeblock">
+    <pre>
+    <font color="#75507B">#[derive(</font><font color="#4E9A06">Clone</font><font color="#75507B">, </font><font color="#4E9A06">Debug</font><font color="#75507B">, </font><font color="#4E9A06">PartialEq</font><font color="#75507B">)]</font>
+    <font color="#AF5F00">enum</font> <font color="#06989A">Token</font> {
+        Lparen,      <font color="#3465A4">// (</font>
+        Rparen,      <font color="#3465A4">// )</font>
+        Plus,        <font color="#3465A4">// +</font>
+        Minus,       <font color="#3465A4">// -</font>
+        Times,       <font color="#3465A4">// *</font>
+        Slash,       <font color="#3465A4">// /</font>
+        Percent,     <font color="#3465A4">// %</font>
+        Pow,         <font color="#3465A4">// pow</font>
+        Gt,          <font color="#3465A4">// &gt;</font>
+        Lt,          <font color="#3465A4">// &lt;</font>
+        <font color="#4E9A06">Eq</font>,          <font color="#3465A4">// =</font>
+        Gte,         <font color="#3465A4">// &gt;=</font>
+        Lte,         <font color="#3465A4">// &lt;=</font>
+        Let,         <font color="#3465A4">// let</font>
+        Def,         <font color="#3465A4">// def</font>
+        List,        <font color="#3465A4">// list</font>
+        Index,       <font color="#3465A4">// index</font>
+        <font color="#4E9A06">Drop</font>,        <font color="#3465A4">// drop</font>
+        Quote,       <font color="#3465A4">// quote</font>
+        Append,      <font color="#3465A4">// append</font>
+        Range,       <font color="#3465A4">// range</font>
+        Cat,         <font color="#3465A4">// cat</font>
+        Len,         <font color="#3465A4">// len</font>
+        Take,        <font color="#3465A4">// take</font>
+        If,          <font color="#3465A4">// if</font>
+        <font color="#06989A">Int</font>(BigInt), <font color="#3465A4">// Integer literal</font>
+        <font color="#06989A">Dec</font>(<font color="#4E9A06">f64</font>),    <font color="#3465A4">// Floating point literal</font>
+        <font color="#06989A">Bool</font>(<font color="#4E9A06">bool</font>),  <font color="#3465A4">// Boolean literal</font>
+        <font color="#06989A">Id</font>(<font color="#4E9A06">String</font>),  <font color="#3465A4">// identifier (variable name or function name)</font>
+    }   
+  </pre>
+</div>
+
+<p>
+    We will want our tokenizer to to recognize each symbol that can stand on
+    its own. Let's write code that can deduce each symbol.
+</p>
+
+<p>
+    As a bonus, because Rust allows one to easily plug in additional libraries,
+    for our integer type, we can use the
+    <a href="https://crates.io/crates/num-bigint">num-bigint</a> to represent
+    our integers, so that way they won't be limited to just 64 bits. This crate 
+    allows the integers to be arbitrarily large... just as long as they still
+    fit into our computers memory. Our laptop Turing machines don't yet have
+    infinite tape.
+</p>
+
+<p>
+    Add the following lines to your <i>Cargo.toml</i> file to download the 
+    num-bigint dependencies.
+</p>
+
+<div class="codeblock">
+    <pre>
+<font color="#4E9A06">[dependencies]</font>
+num-bigint =<font color="#CC0000"> &quot;0.2&quot;</font>
+num-traits =<font color="#CC0000"> &quot;0.2&quot;</font>
+    </pre>    
+</div>
+
+<p>
+    And now include them in <i>main.rs</i>
+</p>
+
+<div class="codeblock">
+    <pre>
+<font color="#AF5F00">extern</font> <font color="#AF5F00">crate</font> <font color="#06989A">num_bigint</font>;
+<font color="#AF5F00">extern</font> <font color="#AF5F00">crate</font> <font color="#06989A">num_traits</font>;
+
+<font color="#AF5F00">use</font> <font color="#75507B">num_bigint::</font>BigInt</span>;
+</pre>
+</div>
+
+<p>
+    Where were we? Oh yes! Back to the tokenizer! We'll make a function that
+    reads in a string, and returns the appropriate kind of token for that
+    string.
+</p>
+
+<h4>
+    Stay tuned for part 2 where I will go through parsing
+</h4>
