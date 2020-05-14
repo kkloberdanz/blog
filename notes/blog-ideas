@@ -8,6 +8,6 @@
 [DONE] 8) OpenMP - Static or Dynamic Scheduling?
 9) Where should I parallelize?
 10) C Preprocessor token pasting, and making the STL for C
-11) Hand coded SIMD vs Numpy
-12) Hand coded SIMD vs -ffast-math
-13) Prime Sieve
+11) Hand coded SIMD vs Numpy vs -ffast-math
+12) Prime Sieve
+13) A tale of two servers, or why I shudder at the mention of race conditions

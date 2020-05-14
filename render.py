@@ -58,7 +58,8 @@ if __name__ == '__main__':
     to_render = sorted((
         fname
         for fname in os.listdir('templates')
-        if fname != 'template.html'),
+        if fname != 'template.html'
+        and not fname.startswith('wip-')),
         reverse=True
     )
 

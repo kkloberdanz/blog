@@ -1,0 +1,27 @@
+<h4>
+    Parsing
+</h4>
+
+<p>
+    While lexers are usually very simple, and don't know much about the grammar
+    of the language, parsers are much more complicated. A parser takes the
+    tokens from the lexer, and builds a syntax tree from them.
+</p>
+
+<div>
+    <pre>
+            def
+           /   \   
+         gcd   lambda
+              /       \   
+            a  b      if  
+                     / | \ 
+                    /  a  \
+                   =       \
+                 /   \     gcd 
+                0     b   /   \
+                         b   mod
+                              |
+                             a b
+    </pre>
+</div>
