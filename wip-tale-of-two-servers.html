@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Kyle Kloberdanz's Blog</title>
+        <link rel="stylesheet" type="text/css" href="style/style.css" />
+        <link rel="shortcut icon" type="image/svg" href="image/favicon.svg"/>
+    </head>
+
+    <body>
+        <div class="header">
+            <h2>Kyle Kloberdanz's Blog</h2>
+            <h4><a href="index.html">Home</a></h4>
+        </div>
+
+        <div class="row">
+            <div class="leftcolumn">
+                <div class="card">
+<h2 class="posttitle">
+    A tale of two servers, or why I shudder at the mention of race conditions
+</h2>
+<h5>14 May 2020</h5>
+<img class="img" src="image/o-FRANZ-KAFKA-facebook.jpg" alt="Photograph of Franz Kafka, author of Der Prozeß (The Trial)"/>
+
+<p>
+    There are a few phrases that can make the hair on any developer's neck stand
+    straight up.
+</p>
+
+<p>
+    <ul>
+        <li>What do you mean backups?</li>
+        <li>I don't need source control, the code is all on my laptop!</li>
+        <li>Did I release the wrong build into production?</li>
+    </ul>
+</p>
+
+<p>
+    While I have a story for each of those, today, I'm reflecting on the 
+    scariest of all. The silent killer. The one who never shows up in testing.
+    The one who makes your debugger utterly useless. That one bug that won't
+    cause problems for a month, then one day... out of the blue... WHAM!
+    <strong><i>Race Condition!</i></strong>
+</p>
+
+<p>
+    I was writing some code, when one of my colleagues who is downstream of one
+    of the legacy applications I maintain approached my cubicle.
+</p>
+
+<p class="quote">
+    Hey Kyle, P said, We are having an issue submitting our development
+    jobs to your system. This has been happening for the past month, but 
+    since it was only dev jobs, we didn't want to bother you with it. But 
+    it has been really annoying that half of our jobs just get dropped
+    and we are having a hard time working around this issue.
+</p>
+
+<p>
+    I felt bad that a system I was responsible for was causing P's team so much
+    trouble. Had I known about the issue sooner, I would have jumped right
+    on it. But this is strange, why are only half of the dev jobs being rejected?
+    Could it be only certain job types that are getting rejected? Is the server
+    getting overloaded at different times to cause it to miss requests?
+</p>
+
+<div class="foot-notes">
+    To keep my coworkers anonymous, I'm taking the Franz Kafka (see picture at
+    the top) approach, and referring to everyone by their first initial. I
+    would gladly take the name of
+    <strong><a href="https://en.wikipedia.org/wiki/The_Trial">K</a></strong>
+    myself, had I not already blown my identity on this site.
+</div>                </div>
+            </div>
+            <div class="rightcolumn">
+                <div class="card">
+                    <h2>About</h2>
+                    <img class="img" src="image/bw-bike-des-moines-capitol-small.jpg" alt="bicycle, and the Des Moines Capitol Building">
+                    <p>
+                        This blog is about whatever I find interesting at this
+                        very moment. I'll post how-to articles on occasion and
+                        various lessons that I've learned in my career.
+                    </p>
+                </div>
+                <div class="card">
+                    <h2>Me</h2>
+                    <p>
+                        I am a software developer from Des Moines Iowa.
+                        I graduated from the University of Iowa with a B.S.
+                        in Computer Science.
+                    </p>
+                    <p>
+                        I am interested in compilers and
+                        interpreters, and I always strive to understand
+                        how various systems work from the ground up.
+                    </p>
+                    <p>
+                        The languages I use most often include
+                        <ul>
+                            <li>C++</li>
+                            <li>Python</li>
+                            <li>C</li>
+                            <li>Rust</li>
+                        </ul>
+                    </p>
+                    <p>
+                        I like working in a UNIX or Linux environment.
+                    </p>
+                </div>
+                <div class="card">
+                    <h3>Posts</h3>
+                    <ul>
+<li><a href="wip-tale-of-two-servers.html">[wip-tale-of-two-servers] </a></li>
+<li><a href="2020-05-13.html">[2020-05-13] Let's build a Lisp interpreter in Rust! (Part 1 - Lexing)</a></li>
+<li><a href="2020-05-10.html">[2020-05-10] OpenMP - Static or Dynamic Scheduling?</a></li>                    </ul>
+                </div>
+                <div class="card">
+                    <h3>Follow Me</h3>
+                    <ul>
+                        <li>
+                            <a href="https://github.com/kkloberdanz">Github</a>
+                        </li>
+                        <li>
+                            <a href="https://www.linkedin.com/in/kyle-kloberdanz-172aaa5a/">linkedin</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <h3>2020 Kyle Kloberdanz</h3>
+        </div>
+    </body>
+</html>

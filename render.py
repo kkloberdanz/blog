@@ -2,6 +2,7 @@
 
 
 import os
+import sys
 
 
 def get_name(line):
@@ -55,11 +56,12 @@ if __name__ == '__main__':
     if post_index <= 0:
         raise Exception('could not find post start')
 
+    render_wip = '--debug' in sys.argv[1:]
     to_render = sorted((
         fname
         for fname in os.listdir('templates')
         if fname != 'template.html'
-        and not fname.startswith('wip-')),
+        and (render_wip or not fname.startswith('wip-'))),
         reverse=True
     )
 
