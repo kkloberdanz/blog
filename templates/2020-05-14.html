@@ -1,0 +1,169 @@
+<h2 class="posttitle">
+    A tale of two servers, or why I shudder at the mention of race conditions
+</h2>
+<h5>14 May 2020</h5>
+<img class="img" src="image/o-FRANZ-KAFKA-facebook.jpg" alt="Photograph of Franz Kafka, author of Der Prozeß (The Trial)"/>
+
+<p>
+    There are a few phrases that can make the hair on any developer's neck stand
+    straight up.
+</p>
+
+<p>
+    <ul>
+        <li>What do you mean backups?</li>
+        <li>I don't need source control, the code is all on my laptop!</li>
+        <li>Did I release the wrong build into production?</li>
+    </ul>
+</p>
+
+<p>
+    While I have a story for each of those, today, I'm reflecting on the 
+    scariest of all. The silent killer. The one who never shows up in testing.
+    The one who makes your debugger utterly useless. That one bug that won't
+    cause problems for a month, then one day... out of the blue... WHAM!
+    <strong><i>Race Condition!</i></strong>
+</p>
+
+<p>
+    I was writing some code, when one of my colleagues who is downstream of one
+    of the legacy applications I maintain approached my cubicle.
+</p>
+
+<p class="quote">
+    Hey Kyle, P said, We are having an issue submitting our development
+    jobs to your system. This has been happening for the past month, but 
+    since it was only dev jobs, we didn't want to bother you with it. But 
+    it has been really annoying that half of our jobs just get dropped
+    and we are having a hard time working around this issue.
+</p>
+
+<p>
+    I felt bad that a system I was responsible for was causing P's team so much
+    trouble. Had I known about the issue sooner, I would have jumped right
+    on it. But this is strange, why are only half of the dev jobs being rejected?
+    Could it be only certain job types that are getting rejected? Is the server
+    getting overloaded at different times to cause it to miss requests?
+</p>
+
+<p>
+    Digging into server logs and checking the past load with <i>sar</i>, I
+    found nothing wrong. The server was written in Python, so it's easy to
+    check the source code that was deployed and go through it with a fine
+    toothed comb. Unfortunately, there was nothing unusual in the source code.
+    On top of that, the code had not been changed in at least 6 months, as it
+    was a legacy system slowly being phased out.
+</p>
+
+<h4>
+    Frustrated, I opened my debugger.
+</h4>
+
+<p>
+    Running the server in PDB and putting breakpoints all over the place, I
+    sent test jobs through, watched them get accepted into the system and get 
+    submitted to the cluster. All appears normal.
+</p>
+
+<p>
+    Then one job got picked up by the server, but then nothing. It did not
+    get submitted to the cluster. No other breakpoints got hit.
+</p>
+
+<p class="quote">
+    What's going on here?
+</p>
+
+<p>
+    Is this a bug in PDB? I've never had problems with the standard Python
+    debugger missing breakpoints. I sent the jobs again and again, and some
+    would make me hit a breakpoint where the job would be submitted, and some
+    would just not hit at all.
+</p>
+
+<p>
+    Checking the server logs, I could see a line that gets printed out whenever
+    the job is submitted. I put several breakpoints at and around where the 
+    messages are printed, but even then, sometimes the breakpoint is caught,
+    sometimes it doesn't, but the log message still appears.
+</p>
+
+<h4>
+    This is getting spooky.
+</h4>
+
+<p>
+    I then start changing the text in the log message. Adding some extra debug 
+    information should help answer this, right? But now I'm seeing that some 
+    jobs have these changes in the log messages, and some don't.
+</p>
+
+<p>
+    My manager starts getting nervous. We had spent the past couple of hours
+    trying to figure out this problem, and we haven't gotten anywhere yet.
+    He starts asking me, <i>I thought you knew this system? How can we not
+    know what's happening yet?</i>
+</p>
+
+<p>
+    Getting more frustrated with not being able to explain what's going on,
+    I show him. <i>Look here! I even changed the text in the log messages, and 
+    in the logs, half of the jobs have the new text, and half of the jobs 
+    have the old text. This can't be happening!</i>
+</p>
+
+<p>
+    <i>Spend some more time with it, and really make sure you know the system</i>
+    My manager told me.
+</p>
+
+<p>
+    After spending the next several minutes completely dumbfounded, I suddenly
+    start to think. <i>Wait a minute, the new server we requested to replace this 
+    one... I wonder if there is anything running on it yet.</i> I had
+    completely forgotten that we had requested for a new server, as there is
+    approximately a one month turn around time between requesting it, and
+    actually being able to use it. I dig through my emails to find the hostname,
+    log on, check the crontabs, and sure enough, it is set to run the legacy 
+    service I had been debugging!
+</p>
+
+<p>
+    At this point the design of this system is necessary to understand what was 
+    happening. This system exposes a TCP port, which receives data via a 
+    custom binary protocol. It then writes out this data as an XML file, which
+    another process comes by and translates it to JSON and spits it out into another
+    file, which another process then picks up and submits it to the cluster...
+    and these intermediate files are being hosted on an NFS share.
+    <i>(I did not design this monstrosity)</i>
+</p>
+
+<p>
+    Because there were two instances of this service running on two separate
+    machines which have access to the same file share, there was a race
+    condition where whichever machine saw a new file appear first would take
+    it and try to submit it. However, because only the existing server had been 
+    configured to be able to submit to the cluster, only the files that this 
+    server picked up got submitted, and the other would fail.
+</p>
+
+<p>
+    We deleted the crontab from the misconfigured server, and notified the team
+    that the problem is fixed. In the end, it didn't cause much damage, and only 
+    took a few hours to resolve, but my god are these issues hard to debug!
+    Just think, in the unlikely scenario where there was a machine that I didn't 
+    know about accidentally had the crontab from my server applied to it, I
+    would not have had a chance to figure out the problem.
+</p>
+
+<h4>
+    I hate race conditions
+</h4>
+
+<div class="foot-notes">
+    * To keep my coworkers anonymous, I'm taking the Franz Kafka (see picture at
+    the top) approach, and referring to everyone by their first initial. I
+    would gladly take the name of
+    <strong><a href="https://en.wikipedia.org/wiki/The_Trial">K</a></strong>
+    myself, had I not already blown my identity on this site.
+</div>
