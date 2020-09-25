@@ -1,0 +1,69 @@
+<h2 class="posttitle">Convolutions - Where Physics and ML Meet</h2>
+<h5>24 Sep 2020</h5>
+<img class="img" src="image/sin_x_over_x_over_10.png" alt="sin(x) / 0.1x" />
+
+<p>
+    There's a concept in both Physics and Machine Learning called Convolution.
+    There is some debate over whether or not they are the same concept, but I
+    would argue that they are related.
+</p>
+
+<p>
+    This might seem like a round about explanation, but to understand
+    convolutions in machine learning, let's first look at what convolution means
+    from a Physics perspective.
+</p>
+
+<p>
+    Starting with the setup, I'm going to plug one end of my headphone cable
+    into my laptop, and the other I'll attach to my oscilloscope. I'll attach
+    the probe to the left audio channel, and I'll ground the probe on the ground
+    connector on the audio cable.
+</p>
+
+<img class="img" src="image/audio_cable.jpg" alt="440 hz sin wave" />
+
+<p>
+    Using an
+    <a href="https://www.szynalski.com/tone-generator/"
+        >online tone generator</a
+    >
+    , I'll be able to generator audible waves that my oscilloscope will be able
+    to display.
+</p>
+
+<p>Let's start by looking at a simple sin wave. This signal is at 440 hz.</p>
+<img class="img" src="image/440hz.jpg" alt="440 hz sin wave" />
+
+<p>Here we have another sin wave, but this time at 330 hz</p>
+<img class="img" src="image/330hz.jpg" alt="330 hz sin wave" />
+
+<p>
+    These are pretty boring waves, not much to see here. But let's take a look
+    at what happens when we add these waves together.
+</p>
+
+<div class="codeblock">
+    t = 0:1/50:10-1/50;<br />
+    x = sin(2*pi*15*t) + sin(2*pi*20*t);<br />
+    plot(t,x)<br />
+</div>
+
+<div class="codeblock">
+    y = fft(x);<br />
+    f = (0:length(y)-1)*50/length(y);<br />
+    plot(f,abs(y))<br />
+</div>
+
+<div>
+    <img
+        class="img"
+        src="image/signal.svg"
+        alt="sin(2*pi*15*t) + sin(2*pi*20*t)"
+    />
+    <img
+        class="img"
+        src="image/fft.svg"
+        alt="fft(sin(2*pi*15*t) + sin(2*pi*20*t))"
+    />
+</div>
