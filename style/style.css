@@ -63,6 +63,13 @@ img {
     overflow-x: scroll;
 }
 
+.formula {
+    font-family: serif;
+    font-size: 1.4em;
+    height: 1.4em;
+    text-indent: 5%;
+}
+
 .quote {
     font-style: italic;
     text-indent: 5%;
