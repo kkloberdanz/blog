@@ -1,0 +1,319 @@
+<h2 class="posttitle">What is a linear regression?</h2>
+<h5>16 Nov 2021</h5>
+<img class="img" src="image/OpenMP_logo.png" />
+<p>
+    <a href="https://www.openmp.org/">OpenMP</a>, or OMP, is an API for
+    parallelizing your C, C++, and Fortran code. It works via compiler pragmas,
+    meaning that it will only work if you have a compiler that supports it.
+    Thankfully, most modern compilers support OMP, including
+</p>
+<ul>
+    <li>GCC</li>
+    <li>Clang</li>
+    <li>MSVC</li>
+</ul>
+
+<h4>
+    OpenMP offers many tunables, which can greatly change the performance
+    characteristics. One of which, is the <a href="https://software.intel.com/content/www/us/en/develop/articles/openmp-loop-scheduling.html">scheduler<a>.
+</h4>
+
+<p>
+    Two of the most common scheduling types to use are <strong>static</strong>
+    and <strong>dynamic</strong>. Static scheduling means that each thread gets
+    assigned a chunk of work at the start of the parallel section. If a thread
+    finishes early, then it will stop executing and sit idle while the other
+    threads continue their work. This might sound extremely wasteful, but for
+    workloads where the amount of work per unit is about the same, static may
+    be the best solution, because it has much less overhead than dynamic
+    scheduling. Dynamic scheduling means that threads will get assigned work
+    from a work queue, and can get assigned more work if they finish early and
+    there is more work to be done. This is great if you have a workload where
+    each task may differ in the amount of time it takes to solve.
+</p>
+
+<p>
+    Let's create some benchmarks to see when one scheduling type will be better
+    than the other. Below I have the base code that we will use. This is the
+    single threaded implementation of a program that will find the primes from
+    a range of numbers. The astute mathematicians reading this will note that
+    this is a very naïve algorithm for finding prime numbers, and I should
+    probably be using a <a href="https://en.wikipedia.org/wiki/Generation_of_primes#Prime_sieves">sieve</a>
+    for better performance. This is not a post about algorithm optimization,
+    however. I just need to simulate a workload that keeps my CPUs busy :)
+</p>
+
+<div class="codeblock">
+    <pre>
+    <font color="#AF5F00">  1 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdio.h&gt;</font>
+    <font color="#AF5F00">  2 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdbool.h&gt;</font>
+    <font color="#AF5F00">  3 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;math.h&gt;</font>
+    <font color="#AF5F00">  4 </font>
+    <font color="#AF5F00">  5 </font><font color="#4E9A06">bool</font> is_prime(<font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> n) {
+    <font color="#AF5F00">  6 </font>    <font color="#AF5F00">if</font> (n &lt; <font color="#CC0000">2</font>) {
+    <font color="#AF5F00">  7 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
+    <font color="#AF5F00">  8 </font>    } <font color="#AF5F00">else</font> {
+    <font color="#AF5F00">  9 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> max = sqrt(n) + <font color="#CC0000">1</font>;
+    <font color="#AF5F00"> 10 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
+    <font color="#AF5F00"> 11 </font>        <font color="#AF5F00">for</font> (i = <font color="#CC0000">2</font>; i &lt; max; i++) {
+    <font color="#AF5F00"> 12 </font>            <font color="#AF5F00">if</font> (n % i == <font color="#CC0000">0</font>) {
+    <font color="#AF5F00"> 13 </font>                <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
+    <font color="#AF5F00"> 14 </font>            }
+    <font color="#AF5F00"> 15 </font>        }
+    <font color="#AF5F00"> 16 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">true</font>;
+    <font color="#AF5F00"> 17 </font>    }
+    <font color="#AF5F00"> 18 </font>}
+    <font color="#AF5F00"> 19 </font>
+    <font color="#AF5F00"> 20 </font><font color="#4E9A06">int</font> main(<font color="#4E9A06">void</font>) {
+    <font color="#AF5F00"> 21 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> start = <font color="#CC0000">9223372036854775808UL</font>;
+    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">1000</font>;
+    <font color="#AF5F00"> 23 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
+    <font color="#AF5F00"> 24 </font>
+    <font color="#AF5F00"> 25 </font>    <font color="#AF5F00">for</font> (i = start; i &lt; end; i++) {
+    <font color="#AF5F00"> 26 </font>        printf(<font color="#CC0000">&quot;testing: </font><font color="#75507B">%lu\n</font><font color="#CC0000">&quot;</font>, i);
+    <font color="#AF5F00"> 27 </font>        <font color="#AF5F00">if</font> (is_prime(i)) {
+    <font color="#AF5F00"> 28 </font>            printf(<font color="#CC0000">&quot;</font><font color="#75507B">%lu</font><font color="#CC0000"> is prime</font><font color="#75507B">\n</font><font color="#CC0000">&quot;</font>, i);
+    <font color="#AF5F00"> 29 </font>        }
+    <font color="#AF5F00"> 30 </font>    }
+    <font color="#AF5F00"> 31 </font>    <font color="#AF5F00">return</font> <font color="#CC0000">0</font>;
+    <font color="#AF5F00"> 32 </font>}
+    </pre>
+</div>
+
+<div class="codeblock">
+    <pre>
+    $ clang -o single single.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm
+    $ time ./single
+    9223372036854775837 is prime
+    9223372036854775907 is prime
+    9223372036854775931 is prime
+    9223372036854775939 is prime
+    9223372036854775963 is prime
+    9223372036854776063 is prime
+    9223372036854776077 is prime
+    9223372036854776167 is prime
+    9223372036854776243 is prime
+    9223372036854776257 is prime
+    9223372036854776261 is prime
+    9223372036854776293 is prime
+    9223372036854776299 is prime
+    9223372036854776351 is prime
+    9223372036854776393 is prime
+    9223372036854776407 is prime
+    9223372036854776561 is prime
+    9223372036854776657 is prime
+    9223372036854776687 is prime
+    9223372036854776693 is prime
+    9223372036854776711 is prime
+    9223372036854776803 is prime
+    
+    real    10m28.951s
+    user    10m28.739s
+    sys     0m0.020s
+    </pre>
+</div>
+
+<h4>
+    10m28.951s - Now that we have a baseline, let's start multithreading with OpenMP!
+</h4>
+
+<p>
+    As you can see, I only had to add a few lines to make this program
+    multithreaded. I simply added the <strong>pragma</strong> to tell openmp
+    to parallelize this for loop, as well as a <strong>critical</strong>
+    section to enforce that only a single thread can print at a time. This will
+    keep our messages from colliding with each other.
+</p>
+
+<div class="codeblock">
+    <pre>
+    <font color="#AF5F00">  1 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdio.h&gt;</font>
+    <font color="#AF5F00">  2 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdbool.h&gt;</font>
+    <font color="#AF5F00">  3 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;math.h&gt;</font>
+    <font color="#AF5F00">  4 </font>
+    <font color="#AF5F00">  5 </font><font color="#4E9A06">bool</font> is_prime(<font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> n) {
+    <font color="#AF5F00">  6 </font>    <font color="#AF5F00">if</font> (n &lt; <font color="#CC0000">2</font>) {
+    <font color="#AF5F00">  7 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
+    <font color="#AF5F00">  8 </font>    } <font color="#AF5F00">else</font> {
+    <font color="#AF5F00">  9 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> max = sqrt(n) + <font color="#CC0000">1</font>;
+    <font color="#AF5F00"> 10 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
+    <font color="#AF5F00"> 11 </font>        <font color="#AF5F00">for</font> (i = <font color="#CC0000">2</font>; i &lt; max; i++) {
+    <font color="#AF5F00"> 12 </font>            <font color="#AF5F00">if</font> (n % i == <font color="#CC0000">0</font>) {
+    <font color="#AF5F00"> 13 </font>                <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
+    <font color="#AF5F00"> 14 </font>            }
+    <font color="#AF5F00"> 15 </font>        }
+    <font color="#AF5F00"> 16 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">true</font>;
+    <font color="#AF5F00"> 17 </font>    }
+    <font color="#AF5F00"> 18 </font>}
+    <font color="#AF5F00"> 19 </font>
+    <font color="#AF5F00"> 20 </font><font color="#4E9A06">int</font> main(<font color="#4E9A06">void</font>) {
+    <font color="#AF5F00"> 21 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> start = <font color="#CC0000">9223372036854775808UL</font>;
+    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">1000</font>;
+    <font color="#AF5F00"> 23 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
+    <font color="#AF5F00"> 24 </font>
+    <font color="#AF5F00"> 25 </font>    <font color="#75507B">#pragma omp parallel </font><font color="#AF5F00">for</font><font color="#75507B"> schedule(</font><font color="#4E9A06">static</font><font color="#75507B">)</font>
+    <font color="#AF5F00"> 26 </font>    <font color="#AF5F00">for</font> (i = start; i &lt; end; i++) {
+    <font color="#AF5F00"> 27 </font>        <font color="#AF5F00">if</font> (is_prime(i)) {
+    <font color="#AF5F00"> 28 </font>            <font color="#75507B">#pragma omp critical</font>
+    <font color="#AF5F00"> 29 </font>            {
+    <font color="#AF5F00"> 30 </font>                printf(<font color="#CC0000">&quot;</font><font color="#75507B">%lu</font><font color="#CC0000"> is prime</font><font color="#75507B">\n</font><font color="#CC0000">&quot;</font>, i);
+    <font color="#AF5F00"> 31 </font>            }
+    <font color="#AF5F00"> 32 </font>        }
+    <font color="#AF5F00"> 33 </font>    }
+    <font color="#AF5F00"> 34 </font>    <font color="#AF5F00">return</font> <font color="#CC0000">0</font>;
+    <font color="#AF5F00"> 35 </font>}
+    </pre>
+</div>
+
+<div class="codeblock">
+    <pre>
+    $ clang -o static static.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm
+    9223372036854776351 is prime
+    9223372036854775837 is prime
+    9223372036854775939 is prime
+    9223372036854776063 is prime
+    9223372036854776167 is prime
+    9223372036854776657 is prime
+    9223372036854776561 is prime
+    9223372036854776393 is prime
+    9223372036854776687 is prime
+    9223372036854776257 is prime
+    9223372036854776803 is prime
+    9223372036854775907 is prime
+    9223372036854776243 is prime
+    9223372036854775963 is prime
+    9223372036854776077 is prime
+    9223372036854776407 is prime
+    9223372036854776693 is prime
+    9223372036854776261 is prime
+    9223372036854775931 is prime
+    9223372036854776711 is prime
+    9223372036854776293 is prime
+    9223372036854776299 is prime
+    
+    real    2m14.245s
+    user    15m17.936s
+    sys     0m0.212s
+    </pre>
+</div>
+
+<p>
+    2m14.245s - That's a quite a bit bit faster... but let's think about how
+    the complexity of our prime algorithm works. If we start with the number
+    <strong>96</strong>, then when we apply our <strong>is_prime</strong>
+    function, the first thing we divide by is <strong>2</strong>... which has a
+    remainder of <strong>0</strong>, and then we're done.<br>
+</p>
+<p>
+    Next number, <strong>97</strong><br>
+    Let's try <strong>2</strong>. Is the remainder <strong>0</strong>? no<br>
+    How about <strong>3</strong>? no<br>
+    Maybe <strong>4</strong>? no<br>
+    <strong>5</strong>? no<br>
+    <strong>6</strong>? no<br>
+    <strong>7</strong>? no<br>
+    <strong>8</strong>? no<br>
+    <strong>9</strong>? no<br>
+    <strong>10</strong>? no<br>
+    And now we have tested numbers up to the <strong>sqrt(97)</strong>, and we
+    can now conclude that <strong>97</strong> is prime!
+</p>
+
+<p>
+    <strong>97</strong> was <strong>A LOT</strong> more work to test than
+    <strong>96</strong> even though they were right next to each other!
+</p>
+
+<p>
+    This algorithm has wildly different runtimes for different inputs, so 
+    let's get smarter with how we multithread it. Let's try to keep those
+    worker threads as busy as possible!
+</p>
+
+<h4>
+    In OpenMP, changing the scheduling type is as simple as replacing static 
+    with dynamic
+</h4>
+
+<div class="codeblock">
+    <pre>
+    <font color="#AF5F00">  1 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdio.h&gt;</font>
+    <font color="#AF5F00">  2 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdbool.h&gt;</font>
+    <font color="#AF5F00">  3 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;math.h&gt;</font>
+    <font color="#AF5F00">  4 </font>
+    <font color="#AF5F00">  5 </font><font color="#4E9A06">bool</font> is_prime(<font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> n) {
+    <font color="#AF5F00">  6 </font>    <font color="#AF5F00">if</font> (n &lt; <font color="#CC0000">2</font>) {
+    <font color="#AF5F00">  7 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
+    <font color="#AF5F00">  8 </font>    } <font color="#AF5F00">else</font> {
+    <font color="#AF5F00">  9 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> max = sqrt(n) + <font color="#CC0000">1</font>;
+    <font color="#AF5F00"> 10 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
+    <font color="#AF5F00"> 11 </font>        <font color="#AF5F00">for</font> (i = <font color="#CC0000">2</font>; i &lt; max; i++) {
+    <font color="#AF5F00"> 12 </font>            <font color="#AF5F00">if</font> (n % i == <font color="#CC0000">0</font>) {
+    <font color="#AF5F00"> 13 </font>                <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
+    <font color="#AF5F00"> 14 </font>            }
+    <font color="#AF5F00"> 15 </font>        }
+    <font color="#AF5F00"> 16 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">true</font>;
+    <font color="#AF5F00"> 17 </font>    }
+    <font color="#AF5F00"> 18 </font>}
+    <font color="#AF5F00"> 19 </font>
+    <font color="#AF5F00"> 20 </font><font color="#4E9A06">int</font> main(<font color="#4E9A06">void</font>) {
+    <font color="#AF5F00"> 21 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> start = <font color="#CC0000">9223372036854775808UL</font>;
+    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">1000</font>;
+    <font color="#AF5F00"> 23 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
+    <font color="#AF5F00"> 24 </font>
+    <font color="#AF5F00"> 25 </font>    <font color="#75507B">#pragma omp parallel </font><font color="#AF5F00">for</font><font color="#75507B"> schedule(dynamic)</font>
+    <font color="#AF5F00"> 26 </font>    <font color="#AF5F00">for</font> (i = start; i &lt; end; i++) {
+    <font color="#AF5F00"> 27 </font>        <font color="#AF5F00">if</font> (is_prime(i)) {
+    <font color="#AF5F00"> 28 </font>            <font color="#75507B">#pragma omp critical</font>
+    <font color="#AF5F00"> 29 </font>            {
+    <font color="#AF5F00"> 30 </font>                printf(<font color="#CC0000">&quot;</font><font color="#75507B">%lu</font><font color="#CC0000"> is prime</font><font color="#75507B">\n</font><font color="#CC0000">&quot;</font>, i);
+    <font color="#AF5F00"> 31 </font>            }
+    <font color="#AF5F00"> 32 </font>        }
+    <font color="#AF5F00"> 33 </font>    }
+    <font color="#AF5F00"> 34 </font>    <font color="#AF5F00">return</font> <font color="#CC0000">0</font>;
+    <font color="#AF5F00"> 35 </font>}
+    </pre>
+</div>
+
+<div class="codeblock">
+    <pre>
+    clang -o dynamic dynamic.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm
+    time ./dynamic
+    9223372036854775939 is prime
+    9223372036854775931 is prime
+    9223372036854776167 is prime
+    9223372036854776063 is prime
+    9223372036854776257 is prime
+    9223372036854776077 is prime
+    9223372036854775963 is prime
+    9223372036854775907 is prime
+    9223372036854776243 is prime
+    9223372036854775837 is prime
+    9223372036854776261 is prime
+    9223372036854776293 is prime
+    9223372036854776299 is prime
+    9223372036854776407 is prime
+    9223372036854776393 is prime
+    9223372036854776711 is prime
+    9223372036854776351 is prime
+    9223372036854776687 is prime
+    9223372036854776693 is prime
+    9223372036854776657 is prime
+    9223372036854776803 is prime
+    9223372036854776561 is prime
+    
+    real    1m24.828s
+    user    18m10.744s
+    sys     0m0.436s
+    </pre>
+</div>
+
+<p>
+    1m24.828s - That's a pretty good speedup, considering all we had to do was
+    understand what kind of work our algorithm was doing, and tweak how we use
+    OMP with a single line change!
+</p>
+
+<p class="foot-notes">
+    * All benchmarks were run on a an AMD Ryzen 7 2700X Eight-Core Processor, running Ubuntu 18.04
+</p>
