@@ -18,3 +18,5 @@ cd ../kkloberdanz.github.io
 git add --all
 git commit -m "$COMMIT_MSG"
 git push
+
+echo "CHANGES TO WEBSITE ARE NOW LIVE"
