@@ -1,0 +1,41 @@
+\newlength\mystoreparindent
+\newenvironment{myparindent}[1]{%
+\setlength{\mystoreparindent}{\the\parindent}
+\setlength{\parindent}{#1}
+}{%
+\setlength{\parindent}{\mystoreparindent}
+}
+
+\documentclass[a4paper]{article}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{amsmath}
+
+\DeclarePairedDelimiterX{\infdivx}[2]{(}{)}{%
+  #1\;\delimsize\|\;#2%
+}
+\newcommand{\infdiv}{D\infdivx}
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\graphicspath{ {./} }
+
+\begin{document}
+
+\begin{myparindent}{0pt}
+
+\[
+  \frac{f(y)}{f'(y)} = \frac{exp(y) - x}{exp(y)}
+  = \frac{exp(y)}{exp(y)} - \frac{x}{exp(y)}
+  = 1 - \frac{x}{exp(y)}
+\]
+
+\end{myparindent}
+\end{document}

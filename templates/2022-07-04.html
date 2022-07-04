@@ -53,283 +53,261 @@
 </p>
 
 <p>
-    Let's use this Taylor Series to implemnt the exponential function in C.
+    Let's use this Taylor Series to implemnt the exponential function in C. The
+    first thing that we can notice from the definition of <i>exp(x)</i> is that
+    the divisors are all constant values. This means that we can compute them
+    ahead of time, which can save us some CPU cycles. We'll start by generating
+    a table of the pre-computed denominators. For this post, we'll stick to
+    purely 32 bit single precision IEEE-754 floating point representations,
+    hense the <i>f</i> suffix to each number. We'll also keep everything 32 byte
+    aligned so that we can use AVX operations on this array.
 </p>
 
 <div class="codeblock">
-    <pre>
-    <font color="#AF5F00">  1 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdio.h&gt;</font>
-    <font color="#AF5F00">  2 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdbool.h&gt;</font>
-    <font color="#AF5F00">  3 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;math.h&gt;</font>
-    <font color="#AF5F00">  4 </font>
-    <font color="#AF5F00">  5 </font><font color="#4E9A06">bool</font> is_prime(<font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> n) {
-    <font color="#AF5F00">  6 </font>    <font color="#AF5F00">if</font> (n &lt; <font color="#CC0000">2</font>) {
-    <font color="#AF5F00">  7 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
-    <font color="#AF5F00">  8 </font>    } <font color="#AF5F00">else</font> {
-    <font color="#AF5F00">  9 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> max = sqrt(n) + <font color="#CC0000">1</font>;
-    <font color="#AF5F00"> 10 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
-    <font color="#AF5F00"> 11 </font>        <font color="#AF5F00">for</font> (i = <font color="#CC0000">2</font>; i &lt; max; i++) {
-    <font color="#AF5F00"> 12 </font>            <font color="#AF5F00">if</font> (n % i == <font color="#CC0000">0</font>) {
-    <font color="#AF5F00"> 13 </font>                <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
-    <font color="#AF5F00"> 14 </font>            }
-    <font color="#AF5F00"> 15 </font>        }
-    <font color="#AF5F00"> 16 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">true</font>;
-    <font color="#AF5F00"> 17 </font>    }
-    <font color="#AF5F00"> 18 </font>}
-    <font color="#AF5F00"> 19 </font>
-    <font color="#AF5F00"> 20 </font><font color="#4E9A06">int</font> main(<font color="#4E9A06">void</font>) {
-    <font color="#AF5F00"> 21 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> start = <font color="#CC0000">9223372036854775808UL</font>;
-    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">1000</font>;
-    <font color="#AF5F00"> 23 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
-    <font color="#AF5F00"> 24 </font>
-    <font color="#AF5F00"> 25 </font>    <font color="#AF5F00">for</font> (i = start; i &lt; end; i++) {
-    <font color="#AF5F00"> 26 </font>        printf(<font color="#CC0000">&quot;testing: </font><font color="#75507B">%lu\n</font><font color="#CC0000">&quot;</font>, i);
-    <font color="#AF5F00"> 27 </font>        <font color="#AF5F00">if</font> (is_prime(i)) {
-    <font color="#AF5F00"> 28 </font>            printf(<font color="#CC0000">&quot;</font><font color="#75507B">%lu</font><font color="#CC0000"> is prime</font><font color="#75507B">\n</font><font color="#CC0000">&quot;</font>, i);
-    <font color="#AF5F00"> 29 </font>        }
-    <font color="#AF5F00"> 30 </font>    }
-    <font color="#AF5F00"> 31 </font>    <font color="#AF5F00">return</font> <font color="#CC0000">0</font>;
-    <font color="#AF5F00"> 32 </font>}
-    </pre>
-</div>
-
-<div class="codeblock">
-    <pre>
-    $ clang -o single single.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm
-    $ time ./single
-    9223372036854775837 is prime
-    9223372036854775907 is prime
-    9223372036854775931 is prime
-    9223372036854775939 is prime
-    9223372036854775963 is prime
-    9223372036854776063 is prime
-    9223372036854776077 is prime
-    9223372036854776167 is prime
-    9223372036854776243 is prime
-    9223372036854776257 is prime
-    9223372036854776261 is prime
-    9223372036854776293 is prime
-    9223372036854776299 is prime
-    9223372036854776351 is prime
-    9223372036854776393 is prime
-    9223372036854776407 is prime
-    9223372036854776561 is prime
-    9223372036854776657 is prime
-    9223372036854776687 is prime
-    9223372036854776693 is prime
-    9223372036854776711 is prime
-    9223372036854776803 is prime
-    
-    real    10m28.951s
-    user    10m28.739s
-    sys     0m0.020s
-    </pre>
-</div>
-
-<h4>
-    10m28.951s - Now that we have a baseline, let's start multithreading with
-    OpenMP!
-</h4>
-
-<p>
-    As you can see, I only had to add a few lines to make this program
-    multithreaded. I simply added the <strong>pragma</strong> to tell openmp to
-    parallelize this for loop, as well as a <strong>critical</strong>
-    section to enforce that only a single thread can print at a time. This will
-    keep our messages from colliding with each other.
-</p>
-
-<div class="codeblock">
-    <pre>
-    <font color="#AF5F00">  1 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdio.h&gt;</font>
-    <font color="#AF5F00">  2 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdbool.h&gt;</font>
-    <font color="#AF5F00">  3 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;math.h&gt;</font>
-    <font color="#AF5F00">  4 </font>
-    <font color="#AF5F00">  5 </font><font color="#4E9A06">bool</font> is_prime(<font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> n) {
-    <font color="#AF5F00">  6 </font>    <font color="#AF5F00">if</font> (n &lt; <font color="#CC0000">2</font>) {
-    <font color="#AF5F00">  7 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
-    <font color="#AF5F00">  8 </font>    } <font color="#AF5F00">else</font> {
-    <font color="#AF5F00">  9 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> max = sqrt(n) + <font color="#CC0000">1</font>;
-    <font color="#AF5F00"> 10 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
-    <font color="#AF5F00"> 11 </font>        <font color="#AF5F00">for</font> (i = <font color="#CC0000">2</font>; i &lt; max; i++) {
-    <font color="#AF5F00"> 12 </font>            <font color="#AF5F00">if</font> (n % i == <font color="#CC0000">0</font>) {
-    <font color="#AF5F00"> 13 </font>                <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
-    <font color="#AF5F00"> 14 </font>            }
-    <font color="#AF5F00"> 15 </font>        }
-    <font color="#AF5F00"> 16 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">true</font>;
-    <font color="#AF5F00"> 17 </font>    }
-    <font color="#AF5F00"> 18 </font>}
-    <font color="#AF5F00"> 19 </font>
-    <font color="#AF5F00"> 20 </font><font color="#4E9A06">int</font> main(<font color="#4E9A06">void</font>) {
-    <font color="#AF5F00"> 21 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> start = <font color="#CC0000">9223372036854775808UL</font>;
-    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">1000</font>;
-    <font color="#AF5F00"> 23 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
-    <font color="#AF5F00"> 24 </font>
-    <font color="#AF5F00"> 25 </font>    <font color="#75507B">#pragma omp parallel </font><font color="#AF5F00">for</font><font color="#75507B"> schedule(</font><font color="#4E9A06">static</font><font color="#75507B">)</font>
-    <font color="#AF5F00"> 26 </font>    <font color="#AF5F00">for</font> (i = start; i &lt; end; i++) {
-    <font color="#AF5F00"> 27 </font>        <font color="#AF5F00">if</font> (is_prime(i)) {
-    <font color="#AF5F00"> 28 </font>            <font color="#75507B">#pragma omp critical</font>
-    <font color="#AF5F00"> 29 </font>            {
-    <font color="#AF5F00"> 30 </font>                printf(<font color="#CC0000">&quot;</font><font color="#75507B">%lu</font><font color="#CC0000"> is prime</font><font color="#75507B">\n</font><font color="#CC0000">&quot;</font>, i);
-    <font color="#AF5F00"> 31 </font>            }
-    <font color="#AF5F00"> 32 </font>        }
-    <font color="#AF5F00"> 33 </font>    }
-    <font color="#AF5F00"> 34 </font>    <font color="#AF5F00">return</font> <font color="#CC0000">0</font>;
-    <font color="#AF5F00"> 35 </font>}
-    </pre>
-</div>
-
-<div class="codeblock">
-    <pre>
-    $ clang -o static static.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm
-    9223372036854776351 is prime
-    9223372036854775837 is prime
-    9223372036854775939 is prime
-    9223372036854776063 is prime
-    9223372036854776167 is prime
-    9223372036854776657 is prime
-    9223372036854776561 is prime
-    9223372036854776393 is prime
-    9223372036854776687 is prime
-    9223372036854776257 is prime
-    9223372036854776803 is prime
-    9223372036854775907 is prime
-    9223372036854776243 is prime
-    9223372036854775963 is prime
-    9223372036854776077 is prime
-    9223372036854776407 is prime
-    9223372036854776693 is prime
-    9223372036854776261 is prime
-    9223372036854775931 is prime
-    9223372036854776711 is prime
-    9223372036854776293 is prime
-    9223372036854776299 is prime
-    
-    real    2m14.245s
-    user    15m17.936s
-    sys     0m0.212s
+    <pre><font color="#4E9A06">static</font> <font color="#4E9A06">const</font> <font color="#4E9A06">float</font> EXPF_DIVISORS[] __attribute__((aligned(<font color="#CC0000">32</font>))) = { 
+    <font color="#CC0000">2.0f</font>,
+    <font color="#CC0000">6.0f</font>,
+    <font color="#CC0000">24.0f</font>,
+    <font color="#CC0000">120.0f</font>,
+    <font color="#CC0000">720.0f</font>,
+    <font color="#CC0000">5040.0f</font>,
+    <font color="#CC0000">40320.0f</font>,
+    <font color="#CC0000">362880.0f</font>,
+    <font color="#CC0000">3628800.0f</font>,
+    <font color="#CC0000">39916800.0f</font>,
+    <font color="#CC0000">479001600.0f</font>,
+    <font color="#CC0000">6227020800.0f</font>,
+    <font color="#CC0000">87178291200.0f</font>,
+    <font color="#CC0000">1307674368000.0f</font>,
+    <font color="#CC0000">20922789888000.0f</font>,
+    <font color="#CC0000">355687428096000.0f</font>,
+    <font color="#CC0000">6402373705728000.0f</font>,
+    <font color="#CC0000">121645100408832000.0f</font>,
+    <font color="#CC0000">2432902008176640000.0f</font>,
+    <font color="#CC0000">51090942171709440000.0f</font>,
+    <font color="#CC0000">1124000727777607680000.0f</font>,
+    <font color="#CC0000">25852016738884976640000.0f</font>,
+    <font color="#CC0000">620448401733239439360000.0f</font>,
+    <font color="#CC0000">15511210043330985984000000.0f</font>,
+    <font color="#CC0000">403291461126605635584000000.0f</font>,
+    <font color="#CC0000">10888869450418352160768000000.0f</font>,
+    <font color="#CC0000">304888344611713860501504000000.0f</font>,
+    <font color="#CC0000">8841761993739701954543616000000.0f</font>,
+    <font color="#CC0000">265252859812191058636308480000000.0f</font>,
+    <font color="#CC0000">8222838654177922817725562880000000.0f</font>,
+    <font color="#CC0000">263130836933693530167218012160000000.0f</font>,
+    <font color="#CC0000">8683317618811886495518194401280000000.0f</font>
+};
     </pre>
 </div>
 
 <p>
-    2m14.245s - That's a quite a bit bit faster... but let's think about how the
-    complexity of our prime algorithm works. If we start with the number
-    <strong>96</strong>, then when we apply our
-    <strong>is_prime</strong> function, the first thing we divide by is
-    <strong>2</strong>... which has a remainder of <strong>0</strong>, and then
-    we're done.<br />
-</p>
-<p>
-    Next number, <strong>97</strong><br />
-    Let's try <strong>2</strong>. Is the remainder <strong>0</strong>? no<br />
-    How about <strong>3</strong>? no<br />
-    Maybe <strong>4</strong>? no<br />
-    <strong>5</strong>? no<br />
-    <strong>6</strong>? no<br />
-    <strong>7</strong>? no<br />
-    <strong>8</strong>? no<br />
-    <strong>9</strong>? no<br />
-    <strong>10</strong>? no<br />
-    And now we have tested numbers up to the <strong>sqrt(97)</strong>, and we
-    can now conclude that <strong>97</strong> is prime!
+    Now that we have precomputed this table of devisors, we can get into the
+    meat and potatoes of this algorithm, the Taylor Series. Based on the formula
+    for <i>exp(x)</i>, we will be raising <i>x</i> to a power in each term. One
+    thing we can see right away however, is that the power is always an integer.
+    This is an important point to notice for optimization purposes, becuase this
+    means we can use repeated multiplication instead (which is fast) instead of
+    the <i>pow()</i> function (which is slow).
 </p>
 
 <p>
-    <strong>97</strong> was <strong>A LOT</strong> more work to test than
-    <strong>96</strong> even though they were right next to each other!
+    Another interesting note is there is a very useful property of exponents
+    such that the following is true.
 </p>
-
-<p>
-    This algorithm has wildly different runtimes for different inputs, so let's
-    get smarter with how we multithread it. Let's try to keep those worker
-    threads as busy as possible!
-</p>
-
-<h4>
-    In OpenMP, changing the scheduling type is as simple as replacing static
-    with dynamic
-</h4>
 
 <div class="codeblock">
-    <pre>
-    <font color="#AF5F00">  1 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdio.h&gt;</font>
-    <font color="#AF5F00">  2 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;stdbool.h&gt;</font>
-    <font color="#AF5F00">  3 </font><font color="#75507B">#include </font><font color="#CC0000">&lt;math.h&gt;</font>
-    <font color="#AF5F00">  4 </font>
-    <font color="#AF5F00">  5 </font><font color="#4E9A06">bool</font> is_prime(<font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> n) {
-    <font color="#AF5F00">  6 </font>    <font color="#AF5F00">if</font> (n &lt; <font color="#CC0000">2</font>) {
-    <font color="#AF5F00">  7 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
-    <font color="#AF5F00">  8 </font>    } <font color="#AF5F00">else</font> {
-    <font color="#AF5F00">  9 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> max = sqrt(n) + <font color="#CC0000">1</font>;
-    <font color="#AF5F00"> 10 </font>        <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
-    <font color="#AF5F00"> 11 </font>        <font color="#AF5F00">for</font> (i = <font color="#CC0000">2</font>; i &lt; max; i++) {
-    <font color="#AF5F00"> 12 </font>            <font color="#AF5F00">if</font> (n % i == <font color="#CC0000">0</font>) {
-    <font color="#AF5F00"> 13 </font>                <font color="#AF5F00">return</font> <font color="#CC0000">false</font>;
-    <font color="#AF5F00"> 14 </font>            }
-    <font color="#AF5F00"> 15 </font>        }
-    <font color="#AF5F00"> 16 </font>        <font color="#AF5F00">return</font> <font color="#CC0000">true</font>;
-    <font color="#AF5F00"> 17 </font>    }
-    <font color="#AF5F00"> 18 </font>}
-    <font color="#AF5F00"> 19 </font>
-    <font color="#AF5F00"> 20 </font><font color="#4E9A06">int</font> main(<font color="#4E9A06">void</font>) {
-    <font color="#AF5F00"> 21 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> start = <font color="#CC0000">9223372036854775808UL</font>;
-    <font color="#AF5F00"> 22 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> end = start + <font color="#CC0000">1000</font>;
-    <font color="#AF5F00"> 23 </font>    <font color="#4E9A06">unsigned</font> <font color="#4E9A06">long</font> i;
-    <font color="#AF5F00"> 24 </font>
-    <font color="#AF5F00"> 25 </font>    <font color="#75507B">#pragma omp parallel </font><font color="#AF5F00">for</font><font color="#75507B"> schedule(dynamic)</font>
-    <font color="#AF5F00"> 26 </font>    <font color="#AF5F00">for</font> (i = start; i &lt; end; i++) {
-    <font color="#AF5F00"> 27 </font>        <font color="#AF5F00">if</font> (is_prime(i)) {
-    <font color="#AF5F00"> 28 </font>            <font color="#75507B">#pragma omp critical</font>
-    <font color="#AF5F00"> 29 </font>            {
-    <font color="#AF5F00"> 30 </font>                printf(<font color="#CC0000">&quot;</font><font color="#75507B">%lu</font><font color="#CC0000"> is prime</font><font color="#75507B">\n</font><font color="#CC0000">&quot;</font>, i);
-    <font color="#AF5F00"> 31 </font>            }
-    <font color="#AF5F00"> 32 </font>        }
-    <font color="#AF5F00"> 33 </font>    }
-    <font color="#AF5F00"> 34 </font>    <font color="#AF5F00">return</font> <font color="#CC0000">0</font>;
-    <font color="#AF5F00"> 35 </font>}
-    </pre>
-</div>
-
-<div class="codeblock">
-    <pre>
-    clang -o dynamic dynamic.c -fopenmp -Wall -Wextra -Wpedantic -O2 -lm
-    time ./dynamic
-    9223372036854775939 is prime
-    9223372036854775931 is prime
-    9223372036854776167 is prime
-    9223372036854776063 is prime
-    9223372036854776257 is prime
-    9223372036854776077 is prime
-    9223372036854775963 is prime
-    9223372036854775907 is prime
-    9223372036854776243 is prime
-    9223372036854775837 is prime
-    9223372036854776261 is prime
-    9223372036854776293 is prime
-    9223372036854776299 is prime
-    9223372036854776407 is prime
-    9223372036854776393 is prime
-    9223372036854776711 is prime
-    9223372036854776351 is prime
-    9223372036854776687 is prime
-    9223372036854776693 is prime
-    9223372036854776657 is prime
-    9223372036854776803 is prime
-    9223372036854776561 is prime
-    
-    real    1m24.828s
-    user    18m10.744s
-    sys     0m0.436s
-    </pre>
+    a^x * a^y = a^(x + y)
 </div>
 
 <p>
-    1m24.828s - That's a pretty good speedup, considering all we had to do was
-    understand what kind of work our algorithm was doing, and tweak how we use
-    OMP with a single line change!
+    Given this property, if we want to compute x<sup>100</sup>, we don't have to
+    perform <i>x * x * x * x * ... * x</i> one hundred times if we already have
+    other powers of <i>x</i> computed! For example, if we already have x<sup
+        >50</sup
+    >
+    computed, we can simply perform
+    <i>x<sup>50</sup> * x<sup>50</sup> = x<sup>100</sup></i>
+</p>
+
+<p>
+    Concretely, for this implementation we can first find
+    <x>x<sup>2</sup> = x * x</x>, then
+    <i>x<sup>3</sup> = x<sup>2</sup> * x</i> and
+    <i>x<sup>4</sup> = x<sup>2</sup> * x<sup>2</sup></i>
+    and so on. This also has the benefit of better extracting instruction level
+    parallelism from the CPU. Modern CPUs are pipelined and super-scalar, which
+    means that they will have multiple independant units working simultaniously
+    so long as there aren't explicit dependencies between units of work. By
+    minimizing the amount of dependencies between variables, we allow the CPU to
+    do its job of parallelizing these multiplications at the instruction level,
+    and fully utilizing the transistors we paid for!
+</p>
+
+<p>
+    After computing all of the numerators, we can then perform the divisions.
+    I'm writing this on an x86_64 machine, so I'll be using AVX SIMD intrinsics
+    to speed up the computation by performing 8 divisions at a time. Let's see
+    these concepts in action.
+</p>
+
+<div class="codeblock">
+    <pre><font color="#4E9A06">static</font> <font color="#4E9A06">float</font> myexpf(<font color="#4E9A06">float</font> x) {
+    <font color="#4E9A06">size_t</font> i;
+    <font color="#4E9A06">float</font> numerators[<font color="#CC0000">32</font>] __attribute__((aligned(<font color="#CC0000">32</font>)));
+    <font color="#4E9A06">float</font> result[<font color="#CC0000">32</font>] __attribute__((aligned(<font color="#CC0000">32</font>)));
+
+    <font color="#4E9A06">double</font> acc = <font color="#CC0000">1.0</font> + x;
+
+    <font color="#3465A4">/* order of operations with floats is important. It&apos;s best to</font>
+<font color="#3465A4">     * multiply terms of similar orders of magnitude to avoid loss in</font>
+<font color="#3465A4">     * precision. */</font>
+    <font color="#4E9A06">float</font> x2 = x * x;
+    <font color="#4E9A06">float</font> x3 = x2 * x;
+    <font color="#4E9A06">float</font> x4 = x2 * x2;
+    <font color="#4E9A06">float</font> x5 = x2 * x3;
+    <font color="#4E9A06">float</font> x6 = x3 * x3;
+    <font color="#4E9A06">float</font> x7 = x4 * x3;
+    <font color="#4E9A06">float</font> x8 = x4 * x4;
+    <font color="#4E9A06">float</font> x9 = x5 * x4;
+    <font color="#4E9A06">float</font> x10 = x5 * x5;
+    <font color="#4E9A06">float</font> x11 = x6 * x5;
+    <font color="#4E9A06">float</font> x12 = x6 * x6;
+    <font color="#4E9A06">float</font> x13 = x7 * x6;
+    <font color="#4E9A06">float</font> x14 = x7 * x7;
+    <font color="#4E9A06">float</font> x15 = x8 * x7;
+    <font color="#4E9A06">float</font> x16 = x8 * x8;
+    <font color="#4E9A06">float</font> x17 = x9 * x8;
+    <font color="#4E9A06">float</font> x18 = x9 * x9;
+    <font color="#4E9A06">float</font> x19 = x10 * x9;
+    <font color="#4E9A06">float</font> x20 = x10 * x10;
+    <font color="#4E9A06">float</font> x21 = x11 * x10;
+    <font color="#4E9A06">float</font> x22 = x11 * x11;
+    <font color="#4E9A06">float</font> x23 = x12 * x11;
+    <font color="#4E9A06">float</font> x24 = x12 * x12;
+    <font color="#4E9A06">float</font> x25 = x13 * x12;
+    <font color="#4E9A06">float</font> x26 = x13 * x13;
+    <font color="#4E9A06">float</font> x27 = x14 * x13;
+    <font color="#4E9A06">float</font> x28 = x14 * x14;
+    <font color="#4E9A06">float</font> x29 = x15 * x14;
+    <font color="#4E9A06">float</font> x30 = x15 * x15;
+    <font color="#4E9A06">float</font> x31 = x16 * x15;
+    <font color="#4E9A06">float</font> x32 = x16 * x16;
+    <font color="#4E9A06">float</font> x33 = x17 * x16;
+
+    numerators[<font color="#CC0000">0</font>] = x2;
+    numerators[<font color="#CC0000">1</font>] = x3;
+    numerators[<font color="#CC0000">2</font>] = x4;
+    numerators[<font color="#CC0000">3</font>] = x5;
+    numerators[<font color="#CC0000">4</font>] = x6;
+    numerators[<font color="#CC0000">5</font>] = x7;
+    numerators[<font color="#CC0000">6</font>] = x8;
+    numerators[<font color="#CC0000">7</font>] = x9;
+    numerators[<font color="#CC0000">8</font>] = x10;
+    numerators[<font color="#CC0000">9</font>] = x11;
+    numerators[<font color="#CC0000">10</font>] = x12;
+    numerators[<font color="#CC0000">11</font>] = x13;
+    numerators[<font color="#CC0000">12</font>] = x14;
+    numerators[<font color="#CC0000">13</font>] = x15;
+    numerators[<font color="#CC0000">14</font>] = x16;
+    numerators[<font color="#CC0000">15</font>] = x17;
+    numerators[<font color="#CC0000">16</font>] = x18;
+    numerators[<font color="#CC0000">17</font>] = x19;
+    numerators[<font color="#CC0000">18</font>] = x20;
+    numerators[<font color="#CC0000">19</font>] = x21;
+    numerators[<font color="#CC0000">20</font>] = x22;
+    numerators[<font color="#CC0000">21</font>] = x23;
+    numerators[<font color="#CC0000">22</font>] = x24;
+    numerators[<font color="#CC0000">23</font>] = x25;
+    numerators[<font color="#CC0000">24</font>] = x26;
+    numerators[<font color="#CC0000">25</font>] = x27;
+    numerators[<font color="#CC0000">26</font>] = x28;
+    numerators[<font color="#CC0000">27</font>] = x29;
+    numerators[<font color="#CC0000">28</font>] = x30;
+    numerators[<font color="#CC0000">29</font>] = x31;
+    numerators[<font color="#CC0000">30</font>] = x32;
+    numerators[<font color="#CC0000">31</font>] = x33;
+
+    <font color="#3465A4">/*</font>
+<font color="#3465A4">     * Use AVX to compute 8 divisions at a time</font>
+<font color="#3465A4">     */</font>
+    <font color="#AF5F00">for</font> (i = <font color="#CC0000">0</font>; i &lt; <font color="#CC0000">32</font>; i += <font color="#CC0000">8</font>) {
+        <font color="#4E9A06">const</font> __m256 a = _mm256_load_ps(&amp;numerators[i]);
+        <font color="#4E9A06">const</font> __m256 b = _mm256_load_ps(&amp;EXPF_DIVISORS[i]);
+        <font color="#4E9A06">const</font> __m256 res = _mm256_div_ps(a, b);
+
+        _mm256_stream_ps(&amp;result[i], res);
+    }
+
+    <font color="#3465A4">/*</font>
+<font color="#3465A4">     * Sum together all of the results from division</font>
+<font color="#3465A4">     */</font>
+    <font color="#AF5F00">for</font> (i = <font color="#CC0000">0</font>; i &lt; <font color="#CC0000">32</font>; i++) {
+        acc += result[i];
+    }
+    <font color="#AF5F00">return</font> acc;
+}</pre>
+</div>
+
+<p>
+    And that's all there is to it!
+</p>
+
+<p>
+    Now that we've covered exponentiation, let's take a look at its inverse,
+    logarithms! Logarithms are a little more challenging to compute, but by
+    using Neton's Method, we can reformulate <i>log(x)</i> in terms of
+    <i>exp(x)</i>. Let's take a look at the definition of Newton's Method.
+</p>
+
+<p>
+    Newton's Method is an iterative algorithm where you start with a guess for
+    what you think the true answer might be, then refine this guess by
+    repeatedly applying the formula below.
+</p>
+<img class="img" src="image/newtons-method.svg" />
+
+<p>
+    We can solve for <i>log(x)</i> by solving for <i>y - log(x)</i>. Let's
+    consider the property of <i>log(x)</i> and <i>exp(x)</i> in that they are
+    inverses of each other, concretely <i>x = exp(log(x)) = log(exp(x))</i>.
+    Keeping this in mind, we can eliminate the logarithm from our initial
+    equation by distributing <i>exp</i> to each term, and using that function in
+    our Newton's Method approximation. Let's see that below:
+</p>
+
+<p>First, let's find our <i>f(y)</i></p>
+
+<div class="codeblock">
+    <pre>
+        f(y) = exp(y) - exp(log(x))
+        f(y) = exp(y) - x
+    </pre>
+</div>
+
+<p>
+    Next, to satisfy Newton's Method, we will need to find its derivative.
+</p>
+
+<div class="codeblock">
+    <pre>
+        f'(y) = exp(y)
+    </pre>
+</div>
+
+<p>
+    We can now fill in the formula for Newton's Method, simplifying along the
+    way.
+</p>
+<img class="img" src="image/newtons-method-log_x.svg" />
+
+<p>
+    This formula will tell refine our guess for what <i>log(x)</i> is on each
+    iteration, provided we start with a <i>"good enough"</i> guess. Newton's
+    Method is famous for diverging when the guess is not good enough, so we need
+    to come up with a starting value that won't make us diverge!
 </p>
 
 <p class="foot-notes">
-    * All benchmarks were run on a an AMD Ryzen 7 2700X Eight-Core Processor,
-    running Ubuntu 18.04
+    * foot-notes TODO
 </p>
