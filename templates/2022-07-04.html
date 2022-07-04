@@ -107,8 +107,8 @@
     for <i>exp(x)</i>, we will be raising <i>x</i> to a power in each term. One
     thing we can see right away however, is that the power is always an integer.
     This is an important point to notice for optimization purposes, becuase this
-    means we can use repeated multiplication instead (which is fast) instead of
-    the <i>pow()</i> function (which is slow).
+    means we can use repeated multiplication (which is fast) instead of the
+    <i>pow()</i> function (which is slow).
 </p>
 
 <p>
@@ -302,12 +302,191 @@
 <img class="img" src="image/newtons-method-log_x.svg" />
 
 <p>
-    This formula will tell refine our guess for what <i>log(x)</i> is on each
+    This formula will refine our guess for what <i>log(x)</i> is on each
     iteration, provided we start with a <i>"good enough"</i> guess. Newton's
     Method is famous for diverging when the guess is not good enough, so we need
     to come up with a starting value that won't make us diverge!
 </p>
 
-<p class="foot-notes">
-    * foot-notes TODO
+<p>
+    As stated earlier, we'll be looking at only IEEE-754 Single Precision
+    floating point representations. Let's take a look at the spec to see if
+    there is any useful information that this representation gives for free!
+</p>
+
+<img class="img" src="image/single-precision-float.svg" />
+
+<p>
+    We can see that floats have an exponent section. Concretely, a floating
+    point number equals the fraction times ten to the power of the exponent.
+    Since <i>log<sub>10</sub>(10<sup>x</sup>) = x</i>, the exponent field is
+    going to give us the <i>log<sub>10</sub></i> of our number, which we can
+    hypothesis will be close to the natural log of the value.
+</p>
+
+<p>
+    In order to extract the exponent section, we can bitwise and the number with
+    a mask of ones in the place where the exponent bits are, then shift over by
+    the number of bits in the fraction. If we look at the code block below, lets
+    say that 's' is the sign bit, 'e' are the exponent bits, and 'f' are the
+    fraction bits. Let's see how this mask works.
+</p>
+
+<div class="codeblock">
+    <pre>
+    seeeeeeeefffffffffffffffffffffff
+  & 01111111100000000000000000000000
+    --------------------------------
+    0eeeeeeee00000000000000000000000
+    </pre>
+</div>
+
+<div>
+    Shifting to the right by 23 places removes the place where the fraction bits
+    were, and gives us the exponent.
+</div>
+
+<div class="codeblock">
+    <pre>
+    0eeeeeeee00000000000000000000000 >> 23 = eeeeeeee
+    </pre>
+</div>
+
+<p>
+    Using Python, let's convert this mask into hex.
+</p>
+
+<div class="codeblock">
+    <pre><font color="#008700">In [</font><font color="#586E75"><b>1</b></font><font color="#008700">]: hex</font>(<font color="#008700">0b01111111100000000000000000000000</font>)
+<font color="#870000">Out[</font><font color="#CB4B16"><b>1</b></font><font color="#870000">]: </font>&apos;0x7f800000&apos;</pre>
+</div>
+
+<p>
+    Finally, we just need to turn this pseudo code into C! Notice that we are
+    type punning through a union, as casting through pointers violates strict
+    aliasing, and therefore is undefined behavior. By going through a union, we
+    have a portable and safe means of type punning the float to an unsigned int
+    needed for the bitwise operations.
+</p>
+<div class="codeblock">
+    <pre><font color="#4E9A06">union</font> FloatAsInt {
+    <font color="#4E9A06">uint32_t</font> i;
+    <font color="#4E9A06">float</font> f;
+};
+
+<font color="#4E9A06">static</font> <font color="#4E9A06">float</font> get_guess(<font color="#4E9A06">float</font> x) {
+    <font color="#4E9A06">const</font> <font color="#4E9A06">uint32_t</font> exponent_mask = <font color="#CC0000">0x3f800000</font>;
+    <font color="#4E9A06">float</font> guess;
+    <font color="#4E9A06">union</font> FloatAsInt x_as_int;
+    <font color="#4E9A06">uint32_t</font> exponent;
+
+    x_as_int.f = x;
+    exponent = (x_as_int.i &amp; exponent_mask) &gt;&gt; <font color="#CC0000">23</font>;
+    guess = exponent;
+    <font color="#AF5F00">return</font> guess;
+}
+</pre>
+</div>
+
+<p>
+    Now that we have a pretty good guess, we now need to refine it to be a close
+    approximation of <i>log(x)</i>. We will repeatedly apply the formula we
+    derived above using Newton's Method. I found through experimentation that
+    manually unrolling the loop was faster than a for loop, so that is why we
+    see this copy-pasted.
+</p>
+
+<div class="codeblock">
+    <pre><font color="#4E9A06">static</font> <font color="#4E9A06">const</font> <font color="#4E9A06">float</font> CLOSE_TO_ZERO = <font color="#CC0000">1e-10</font>;
+
+<font color="#4E9A06">static</font> <font color="#4E9A06">float</font> newtons_method_log(<font color="#4E9A06">float</font> x, <font color="#4E9A06">float</font> guess) {
+    <font color="#4E9A06">float</font> y = guess;
+
+    <font color="#3465A4">/* manual unrolling in this case was MUCH faster than a for loop */</font>
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+
+    <font color="#AF5F00">if</font> (fabsf(y) &lt; CLOSE_TO_ZERO) {
+        <font color="#AF5F00">return</font> <font color="#CC0000">0</font>;
+    } <font color="#AF5F00">else</font> {
+        <font color="#AF5F00">return</font> y;
+    }
+}
+</pre>
+</div>
+
+<p>
+    Putting this together, let's wrap log up into an easy to use function.
+</p>
+<div class="codeblock">
+    <pre><font color="#4E9A06">float</font> mylogf(<font color="#4E9A06">float</font> x) {
+    <font color="#AF5F00">if</font> (x &lt; <font color="#CC0000">0</font>) {
+        <font color="#AF5F00">return</font> NAN;
+    } <font color="#AF5F00">else</font> <font color="#AF5F00">if</font> (x == <font color="#CC0000">0</font>) {
+        <font color="#AF5F00">return</font> -INFINITY;
+    } <font color="#AF5F00">else</font> <font color="#AF5F00">if</font> (fabsf(x) &lt; CLOSE_TO_ZERO) {
+        <font color="#AF5F00">return</font> <font color="#CC0000">1</font>;
+    } <font color="#AF5F00">else</font> {
+        <font color="#4E9A06">const</font> <font color="#4E9A06">float</font> guess = get_guess(x);
+        <font color="#4E9A06">float</font> y = newtons_method_log(x, guess);
+        <font color="#AF5F00">return</font> y;
+    }
+}
+</pre>
+</div>
+
+<p>
+    But wait, there's more!
+</p>
+
+<p>
+    Now that we have exp and log, we can get sqrt for free by exploiting a
+    simple property of logarithms and exponentiation! I'll prove to you that
+    <i>sqrt(x) = exp(0.5 * log(x))</i> Remember that <i>a^(x * y) = (a^x)^y</i>
+</p>
+
+<div class="codeblock">
+    <pre>
+    exp(0.5 * log(x)) = exp(log(x))^0.5 = x^0.5 = sqrt(x)
+    QED
+    </pre>
+</div>
+
+<p>
+    We can generalize this even further into computing <i>pow</i> for arbitrary
+    inputs.
+</p>
+
+<div class="codeblock">
+    <pre>
+    exp(y * log(x)) = exp(log(x))^y = x^y = pow(x, y)
+    QED
+    </pre>
+</div>
+
+<p>
+    Therefore, with the <i>exp</i> and <i>log</i> functions that we created from
+    scratch above, we can use those to create pow in one line of code!
+</p>
+
+<div class="codeblock">
+    <pre><font color="#4E9A06">float</font> mypowf(<font color="#4E9A06">float</font> x, <font color="#4E9A06">float</font> y) {
+    <font color="#AF5F00">return</font> myexpf(y * mylogf(x));
+}</pre>
+</div>
+
+<p>
+    Remember, these functions are not meant for production use. The standard
+    library of your language of choice most likely has more optimized
+    implementations of these algorithms, but now that you can see simple ways
+    how they work, I hope that this demystifies them. Nothing in programming is
+    magic, someone had to write every line of code that exists!
 </p>
