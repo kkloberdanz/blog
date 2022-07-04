@@ -343,13 +343,15 @@
     number with a mask of <i>ones</i> in the place where the exponent bits are,
     then shift over by the number of bits in the fraction. If we look at the
     code block below, lets say that 's' is the sign bit, 'e' are the exponent
-    bits, and 'f' are the fraction bits. Let's see how this mask works.
+    bits, and 'f' are the fraction bits. Let's see how this mask works. Recall
+    that the first 'e' bit is actually the sign of the exponent, so if we ignore
+    negative numbers, we can ignore this bit in the mask.
 </p>
 
 <div class="codeblock">
     <pre>
     seeeeeeeefffffffffffffffffffffff
-  & 01111111100000000000000000000000
+  & 00111111100000000000000000000000
     --------------------------------
     0eeeeeeee00000000000000000000000
     </pre>
@@ -372,7 +374,7 @@
 
 <div class="codeblock">
     <pre><font color="#008700">In [</font><font color="#586E75"><b>1</b></font><font color="#008700">]: hex</font>(<font color="#008700">0b01111111100000000000000000000000</font>)
-<font color="#870000">Out[</font><font color="#CB4B16"><b>1</b></font><font color="#870000">]: </font>&apos;0x7f800000&apos;</pre>
+<font color="#870000">Out[</font><font color="#CB4B16"><b>1</b></font><font color="#870000">]: </font>&apos;0x3f800000&apos;</pre>
 </div>
 
 <p>
