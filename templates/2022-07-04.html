@@ -14,6 +14,16 @@
 </p>
 
 <p>
+    Today, we'll be taking a look at:
+</p>
+<ul>
+    <li>e<sup>x</sup></li>
+    <li>Natural Logarithms</li>
+    <li>Square Root</li>
+    <li>Power</li>
+</ul>
+
+<p>
     Let's start by looking at one of the most useful numbers in existance,
     <i>e</i>.
 </p>
@@ -260,7 +270,7 @@
 <p>
     Now that we've covered exponentiation, let's take a look at its inverse,
     logarithms! Logarithms are a little more challenging to compute, but by
-    using Neton's Method, we can reformulate <i>log(x)</i> in terms of
+    using Newton's Method, we can reformulate <i>log(x)</i> in terms of
     <i>exp(x)</i>. Let's take a look at the definition of Newton's Method.
 </p>
 
@@ -325,15 +335,15 @@
     point number equals the fraction times ten to the power of the exponent.
     Since <i>log<sub>10</sub>(10<sup>x</sup>) = x</i>, the exponent field is
     going to give us the <i>log<sub>10</sub></i> of our number, which we can
-    hypothesis will be close to the natural log of the value.
+    hypothesize will be close to the natural log of the value.
 </p>
 
 <p>
-    In order to extract the exponent section, we can bitwise and the number with
-    a mask of ones in the place where the exponent bits are, then shift over by
-    the number of bits in the fraction. If we look at the code block below, lets
-    say that 's' is the sign bit, 'e' are the exponent bits, and 'f' are the
-    fraction bits. Let's see how this mask works.
+    In order to extract the exponent section, we can bitwise <i>AND</i> the
+    number with a mask of <i>ones</i> in the place where the exponent bits are,
+    then shift over by the number of bits in the fraction. If we look at the
+    code block below, lets say that 's' is the sign bit, 'e' are the exponent
+    bits, and 'f' are the fraction bits. Let's see how this mask works.
 </p>
 
 <div class="codeblock">
