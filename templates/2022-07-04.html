@@ -1,46 +1,59 @@
-<h2 class="posttitle">What is a linear regression?</h2>
-<h5>16 Nov 2021</h5>
-<img class="img" src="image/OpenMP_logo.png" />
+<h2 class="posttitle">Implementing Math Operations From Scratch</h2>
+<h5>04 July 2021</h5>
+<img class="img" src="image/exp.svg" />
 <p>
-    <a href="https://www.openmp.org/">OpenMP</a>, or OMP, is an API for
-    parallelizing your C, C++, and Fortran code. It works via compiler pragmas,
-    meaning that it will only work if you have a compiler that supports it.
-    Thankfully, most modern compilers support OMP, including
-</p>
-<ul>
-    <li>GCC</li>
-    <li>Clang</li>
-    <li>MSVC</li>
-</ul>
-
-<h4>
-    OpenMP offers many tunables, which can greatly change the performance
-    characteristics. One of which, is the <a href="https://software.intel.com/content/www/us/en/develop/articles/openmp-loop-scheduling.html">scheduler<a>.
-</h4>
-
-<p>
-    Two of the most common scheduling types to use are <strong>static</strong>
-    and <strong>dynamic</strong>. Static scheduling means that each thread gets
-    assigned a chunk of work at the start of the parallel section. If a thread
-    finishes early, then it will stop executing and sit idle while the other
-    threads continue their work. This might sound extremely wasteful, but for
-    workloads where the amount of work per unit is about the same, static may
-    be the best solution, because it has much less overhead than dynamic
-    scheduling. Dynamic scheduling means that threads will get assigned work
-    from a work queue, and can get assigned more work if they finish early and
-    there is more work to be done. This is great if you have a workload where
-    each task may differ in the amount of time it takes to solve.
+    In programming, we use a lot of mathematical functions and operations
+    without thinking much about how they work, or how they're implemented. In
+    this post, I'm going to walk through and explain how one <b><i>could</i></b>
+    implement a few common math functions. The implementations here are not
+    taken from any particular library. Standard library implementations of math
+    functions are commonly highly optimized and can sometimes be hard to read.
+    The purpose of this blog post is to make the code very readable and
+    understandable, with some performance optimizations sprinkled on top so long
+    as it doesn't hinder readability.
 </p>
 
 <p>
-    Let's create some benchmarks to see when one scheduling type will be better
-    than the other. Below I have the base code that we will use. This is the
-    single threaded implementation of a program that will find the primes from
-    a range of numbers. The astute mathematicians reading this will note that
-    this is a very naïve algorithm for finding prime numbers, and I should
-    probably be using a <a href="https://en.wikipedia.org/wiki/Generation_of_primes#Prime_sieves">sieve</a>
-    for better performance. This is not a post about algorithm optimization,
-    however. I just need to simulate a workload that keeps my CPUs busy :)
+    Let's start by looking at one of the most useful numbers in existance,
+    <i>e</i>. Euler's number, or <i>e</i> is a mathematical constant that is
+    better generalized by the exponential function, namely the exponential
+    function evaluated at 1
+</p>
+<div class="codeblock">
+    exp(1) = e
+</div>
+
+<p>
+    More generally,
+</p>
+<div class="codeblock">
+    exp(x) = e^x
+</div>
+
+<p>
+    The exponential function is convienently defined by a Taylor Series, which
+    we can see below.
+</p>
+<img class="img" src="image/exp_x.svg" />
+
+<p>
+    In Computer Science, we have the awful connundrum of trying to simulate real
+    mathematics (i.e., operations on real numbers) with finite precision. We
+    attempt to approximate fields with infinite precision with finite precision
+    constructs such as floating point numbers, which fail to meet even the basic
+    group axioms (e.g., associativity). Such a conundrum means that for most
+    scientific computing work, we must make do with approximations of real
+    numbers.
+</p>
+
+<p>
+    Fortunately, in this case, <i>exp(x)</i> is a convergent series, and
+    therefore we can approximate the true result with a finite number of terms
+    from the Taylor Series.
+</p>
+
+<p>
+    Let's use this Taylor Series to implemnt the exponential function in C.
 </p>
 
 <div class="codeblock">
@@ -114,13 +127,14 @@
 </div>
 
 <h4>
-    10m28.951s - Now that we have a baseline, let's start multithreading with OpenMP!
+    10m28.951s - Now that we have a baseline, let's start multithreading with
+    OpenMP!
 </h4>
 
 <p>
     As you can see, I only had to add a few lines to make this program
-    multithreaded. I simply added the <strong>pragma</strong> to tell openmp
-    to parallelize this for loop, as well as a <strong>critical</strong>
+    multithreaded. I simply added the <strong>pragma</strong> to tell openmp to
+    parallelize this for loop, as well as a <strong>critical</strong>
     section to enforce that only a single thread can print at a time. This will
     keep our messages from colliding with each other.
 </p>
@@ -198,23 +212,24 @@
 </div>
 
 <p>
-    2m14.245s - That's a quite a bit bit faster... but let's think about how
-    the complexity of our prime algorithm works. If we start with the number
-    <strong>96</strong>, then when we apply our <strong>is_prime</strong>
-    function, the first thing we divide by is <strong>2</strong>... which has a
-    remainder of <strong>0</strong>, and then we're done.<br>
+    2m14.245s - That's a quite a bit bit faster... but let's think about how the
+    complexity of our prime algorithm works. If we start with the number
+    <strong>96</strong>, then when we apply our
+    <strong>is_prime</strong> function, the first thing we divide by is
+    <strong>2</strong>... which has a remainder of <strong>0</strong>, and then
+    we're done.<br />
 </p>
 <p>
-    Next number, <strong>97</strong><br>
-    Let's try <strong>2</strong>. Is the remainder <strong>0</strong>? no<br>
-    How about <strong>3</strong>? no<br>
-    Maybe <strong>4</strong>? no<br>
-    <strong>5</strong>? no<br>
-    <strong>6</strong>? no<br>
-    <strong>7</strong>? no<br>
-    <strong>8</strong>? no<br>
-    <strong>9</strong>? no<br>
-    <strong>10</strong>? no<br>
+    Next number, <strong>97</strong><br />
+    Let's try <strong>2</strong>. Is the remainder <strong>0</strong>? no<br />
+    How about <strong>3</strong>? no<br />
+    Maybe <strong>4</strong>? no<br />
+    <strong>5</strong>? no<br />
+    <strong>6</strong>? no<br />
+    <strong>7</strong>? no<br />
+    <strong>8</strong>? no<br />
+    <strong>9</strong>? no<br />
+    <strong>10</strong>? no<br />
     And now we have tested numbers up to the <strong>sqrt(97)</strong>, and we
     can now conclude that <strong>97</strong> is prime!
 </p>
@@ -225,13 +240,13 @@
 </p>
 
 <p>
-    This algorithm has wildly different runtimes for different inputs, so 
-    let's get smarter with how we multithread it. Let's try to keep those
-    worker threads as busy as possible!
+    This algorithm has wildly different runtimes for different inputs, so let's
+    get smarter with how we multithread it. Let's try to keep those worker
+    threads as busy as possible!
 </p>
 
 <h4>
-    In OpenMP, changing the scheduling type is as simple as replacing static 
+    In OpenMP, changing the scheduling type is as simple as replacing static
     with dynamic
 </h4>
 
@@ -315,5 +330,6 @@
 </p>
 
 <p class="foot-notes">
-    * All benchmarks were run on a an AMD Ryzen 7 2700X Eight-Core Processor, running Ubuntu 18.04
+    * All benchmarks were run on a an AMD Ryzen 7 2700X Eight-Core Processor,
+    running Ubuntu 18.04
 </p>
