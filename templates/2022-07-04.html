@@ -15,9 +15,13 @@
 
 <p>
     Let's start by looking at one of the most useful numbers in existance,
-    <i>e</i>. Euler's number, or <i>e</i> is a mathematical constant that is
-    better generalized by the exponential function, namely the exponential
-    function evaluated at 1
+    <i>e</i>.
+</p>
+
+<p>
+    Euler's number, or <i>e</i> is a mathematical constant that is better
+    generalized by the exponential function, namely the exponential function
+    evaluated at 1
 </p>
 <div class="codeblock">
     exp(1) = e
@@ -37,7 +41,7 @@
 <img class="img" src="image/exp_x.svg" />
 
 <p>
-    In Computer Science, we have the awful connundrum of trying to simulate real
+    In Computer Science, we have the awful conundrum of trying to simulate real
     mathematics (i.e., operations on real numbers) with finite precision. We
     attempt to approximate fields with infinite precision with finite precision
     constructs such as floating point numbers, which fail to meet even the basic
@@ -53,14 +57,14 @@
 </p>
 
 <p>
-    Let's use this Taylor Series to implemnt the exponential function in C. The
-    first thing that we can notice from the definition of <i>exp(x)</i> is that
-    the divisors are all constant values. This means that we can compute them
-    ahead of time, which can save us some CPU cycles. We'll start by generating
-    a table of the pre-computed denominators. For this post, we'll stick to
-    purely 32 bit single precision IEEE-754 floating point representations,
-    hense the <i>f</i> suffix to each number. We'll also keep everything 32 byte
-    aligned so that we can use AVX operations on this array.
+    Let's use this Taylor Series to implement the exponential function in C. The
+    first thing that we can notice from the definition of
+    <i>exp(x)</i> is that the divisors are all constant values. This means that
+    we can compute them ahead of time, which can save us some CPU cycles. We'll
+    start by generating a table of the pre-computed denominators. For this post,
+    we'll stick to purely 32 bit single precision IEEE-754 floating point
+    representations, hense the <i>f</i> suffix to each number. We'll also keep
+    everything 32 byte aligned so that we can use AVX operations on this array.
 </p>
 
 <div class="codeblock">
@@ -102,18 +106,18 @@
 </div>
 
 <p>
-    Now that we have precomputed this table of devisors, we can get into the
+    Now that we have precomputed this table of denominators, we can get into the
     meat and potatoes of this algorithm, the Taylor Series. Based on the formula
     for <i>exp(x)</i>, we will be raising <i>x</i> to a power in each term. One
     thing we can see right away however, is that the power is always an integer.
-    This is an important point to notice for optimization purposes, becuase this
+    This is an important point to notice for optimization purposes, because this
     means we can use repeated multiplication (which is fast) instead of the
     <i>pow()</i> function (which is slow).
 </p>
 
 <p>
-    Another interesting note is there is a very useful property of exponents
-    such that the following is true.
+    Another interesting note, there is a very useful property of exponents such
+    that the following is true.
 </p>
 
 <div class="codeblock">
@@ -137,7 +141,7 @@
     <i>x<sup>4</sup> = x<sup>2</sup> * x<sup>2</sup></i>
     and so on. This also has the benefit of better extracting instruction level
     parallelism from the CPU. Modern CPUs are pipelined and super-scalar, which
-    means that they will have multiple independant units working simultaniously
+    means that they will have multiple independent units working simultaneously
     so long as there aren't explicit dependencies between units of work. By
     minimizing the amount of dependencies between variables, we allow the CPU to
     do its job of parallelizing these multiplications at the instruction level,
