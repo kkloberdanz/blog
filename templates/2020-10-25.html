@@ -1,0 +1,171 @@
+<h2 class="posttitle">Convolutions - Where Signal Processing and Machine learning Meet</h2>
+<h5>25 Oct 2020</h5>
+<img class="img" src="image/sin_x_over_x_over_10.png" alt="sin(x) / 0.1x" />
+
+<p>
+    There's a concept in both Signal Processing and Machine Learning called Convolution.
+</p>
+
+<p>
+    This might seem like a round about explanation, but to understand
+    convolutions in machine learning, let's first look at what convolution means
+    from a Signal Processing perspective. In Signal Processing and Mathematics, convolutions are
+    related to fourier transforms, which are usually applied to waves.
+</p>
+
+<p>
+    To take a look at the inner workings of waves and fourier transforms, let's
+    boot up the trusty oscilloscope.
+</p>
+
+<p>
+    Starting with the setup, I'm going to plug one end of my headphone cable
+    into my laptop, and the other I'll attach my oscilloscope probe to. I'll
+    attach the probe to the left audio channel, and I'll ground the probe on the
+    ground connector on the audio cable.
+</p>
+
+<img class="img" src="image/audio_cable.jpg" alt="440 hz sin wave" />
+
+<p>
+    Using an
+    <a href="https://www.szynalski.com/tone-generator/"
+        >online tone generator</a
+    >
+    , I'll be able to generator audible waves that my oscilloscope will be able
+    to display.
+</p>
+
+<p>
+    Let's look at a simple sin wave. This sin wave is at 440 hz.
+</p>
+<img class="img" src="image/440hz.jpg" alt="440 hz sin wave" />
+
+<p>Here we have another sin wave, but this time at 330 hz.</p>
+<img class="img" src="image/330hz.jpg" alt="330 hz sin wave" />
+
+<p>
+    These are pretty boring waves, not much to see here. But let's take a look
+    at what happens when we add these waves together.
+</p>
+
+<p>
+    That looks more interesting! An important thing to know about waves is that
+    when you add them together, the <i>y</i> value of the resulting wave is
+    equal to the sum of the <i>y</i> values of the 2 operands. So assuming we
+    have 2 waves, if at a given point on the <i>x</i> axis one wave has a
+    <i>y</i> value of -1 and the other has a <i>y</i> value of 1, then the
+    resulting wave will have a <i>y</i> value of 0 at that point <i>x</i>.
+</p>
+<img class="" src="image/440hz_plus_330hz.jpg" alt="330 hz + 440 hz sin wave" />
+
+<p>
+    I promised a Fourier transform. A Fourier transform is a way to convert from
+    the time domain into the frequency domain. What this does is it shows the 
+    corresponding frequencies that compose a wave. To demonstrate this, I'll
+    set my oscilloscope to display the Fourier transform of these sin waves
+    below. The two sets of waves that you see are the original signal on top,
+    and the fourier transform of it on the bottom. Notice how the bottom wave 
+    has a spike that goes all the way up to the x-axis. This spike indicates
+    the frequency of the wave we are looking at. In this case it is spiking
+    at the 440hz mark on the x-axis.
+</p>
+<img class="" src="image/440hz_fft.jpg" alt="440 hz sin wave FFT" />
+
+<p>
+    I'll now demonstrate what the Fourier transform looks like when the signal
+    is flat, i.e. no signal. You can see that there are no spikes in the fourier 
+    transform. You will notice that even with the signal turned off, there is 
+    still a small amount of noise that is easy to see when looking at the
+    fourier transform. In a perfect world if the signal was completely flat,
+    then the fourier transform would also be flat. Here we are seeing the
+    messiness of the analog world.
+</p>
+<img class="" src="image/no_signal_fft.jpg" alt="no signal FFT" />
+
+<p>
+    Now, let's do both signals together. There are two bumps! The bump to the
+    left indicates 330 hz and the bump on the right indicates 440 hz. If we,
+    for example, wanted to amplify one frequency in the wave and filter out
+    another, we could do that, and apply an inverse Fourier transform from that
+    to construct a wave that has more signal and less noise! Do you see where 
+    this is heading?
+</p>
+<img class="" src="image/both_fft.jpg" alt="440 hz + 330 hz FFT" />
+
+<p>
+    But what do Fourier transforms have to do with convolutions?
+    There is a very interesting property of the convolution
+    operator such that the the convolution of <i>f</i> and <i>g</i> is equal to
+    the inverse Fourier transform of the Fourier transform of <i>f</i> times the
+    Fourier transform of <i>g</i>. This is called the
+    <a href="https://en.wikipedia.org/wiki/Convolution_theorem"
+        >convolution theorem</a>
+    To put this in mathematical notation, you can see a definition of the
+    convolution operator, i.e. *, below.
+</p>
+
+<div class="formula">
+    f * g = F<sup>-1</sup>(F(f) &#xd7 F(g))
+</div>
+
+<p>
+    What this means is that if we have an input signal and values to use as a
+    filter, we can perform the convolution of these items to get out a filtered
+    signal with just the particular features that we care about.
+</p>
+
+<p>
+    Now that we have seen how convolution is related to the Fourier transform,
+    let's define how to calculate a convolution. The formula below is how you
+    calculate a convolution of two continuous functions, <i>f</i> and <i>g</i>
+    over an infinite time range.
+</p>
+
+<div>
+    <img
+        class="img"
+        src="image/convolution-integral.svg"
+        alt="convolution integral definition"
+    >
+</div>
+
+<p>
+    Convolutions are commonly used for feature extraction in image processing.
+    Since images are a discrete set of pixels and are finite in their bounds,
+    we can simplify the convolution formula to what we see below. Keep in mind,
+    and integral is simply a sum over a continuous set, so we can replace the 
+    integral with a simple sum in our case of discrete data.
+</p>
+
+<div>
+    <img
+        class="img"
+        src="image/convolution-sum.png"
+        alt="convolution sum definition"
+    >
+</div>
+
+<p>
+    Here we can see the result of a convolution being applied to an image.
+</p>
+
+<div>
+    <img
+        class="img"
+        src="image/Edge_detection2.png"
+        alt="convolution before and after"
+    >
+</div>
+
+<div class="foot-notes">
+    <br>
+    * Further reading:
+    <ul>
+        <li><a href="http://ufldl.stanford.edu/tutorial/supervised/FeatureExtractionUsingConvolution/">http://ufldl.stanford.edu/tutorial/supervised/FeatureExtractionUsingConvolution/</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Fourier_transform">https://en.wikipedia.org/wiki/Fourier_transform</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Fourier_series">https://en.wikipedia.org/wiki/Fourier_series</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Convolution">https://en.wikipedia.org/wiki/Convolution</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Multidimensional_discrete_convolution">https://en.wikipedia.org/wiki/Multidimensional_discrete_convolution</a></li>
+    </ul>
+</div>
