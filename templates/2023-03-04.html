@@ -31,7 +31,7 @@
         <a href="#an-operating-system">An operating system</a>
     </li>
     <li>
-        Webserver software
+        <a href="#webserver-software">Webserver software</a>
     </li>
     <li>
         A static IP address
@@ -73,6 +73,10 @@
     c6g.xlarge, which costs $0.136 per hour. Granted, these are much newer cores
     than my machine has, but to reiterate, 3.6 GHz quad core i5 Skylake systems
     can be found on ebay for less than $100, so let's take that as a baseline.
+    Also, it's important to note that when AWS sells you a <it>vCPU</it>, they
+    really mean half of a CPU, since they enable hyperthreading, and treat a
+    single logical core as a single CPU, so in actually a 4 vCPU machine from
+    Amazon will really be a 2 core machine.
 </p>
 
 <div  style="overflow-x: auto">
@@ -118,9 +122,9 @@
 <p>
     Any modern operating system will do. I gravitate towards UNIX flavors, so
     that's what I'll discuss today. While I'm a long time Linux user, I've been
-    FreeBSD more and more lately for servers. I like that ZFS comes with the
-    base operating system, the installer has easy to configure security
-    hardening, it's network stack performance has been blowing me away! This
+    using FreeBSD more and more lately for servers. I like that ZFS comes with
+    the base operating system, the installer has easy to configure security
+    hardening, and it's network stack performance has been blowing me away! This
     guide will mostly work for any Linux distro as well (and probably other
     BSDs), but this guide is targeted at FreeBSD specifically.
 </p>
@@ -139,6 +143,95 @@
     asking which security hardening features you would like to enable. Since
     this operating system is going to be exposed to the public internet, I
     reccomend selecing <strong>all</strong> of them!
+</p>
+
+<img class="img" src="image/bsdinstall-hardening.png" />
+
+<p>
+    There are a few more steps that we will want to take in order to secure our
+    server. First, we want to require SSH keys and forbid using a password to
+    SSH to the server. First create an ssh key pair on your primary computer
+    (not the server!) Next, add the following line to the end of
+    <span style="font-family: monospace">/etc/ssh/sshd_config</span>
+</p>
+
+<div class="codeblock">
+    ChallengeResponseAuthentication no
+</div>
+
+<p>
+    Most SSH attempts happen on port 22. If we change the system's ssh port, we
+    can block a lot oc script kitties and automated attacks that look for an
+    easy target. Changing the port that SSH listens to is security by obscurity.
+    Meaning that it is not good security by itself, but it will at least cut
+    down on the amount of SSH attempts you'll see from unsophisticated
+    attackers. Once again within
+    <span style="font-family: monospace">/etc/ssh/sshd_config</span>, change the
+    line that reads <span style="font-family: monospace">Port 22</span> to
+    instead have a different number, such as:
+</p>
+
+<div class="codeblock">
+    Port 1234
+</div>
+
+<p>
+    For these changes to take effect, restart the SSH service.
+</p>
+
+<div class="codeblock">
+    $ sudo service sshd restart
+</div>
+
+<p>
+    The last step in hardening that we'll do is to enable sshguard. sshguard
+    is similar to Fail2Ban in Linux, and will protect your server from attackers
+    using brute force to try to SSH to your system. You can install it as
+    follows:
+</p>
+
+<div class="codeblock">
+    $ sudo pkg install sshguard
+</div>
+
+<p>
+    To enable sshguard, you'll have to add these line to your 
+    <span style="font-family: monospace">/etc/rc.conf</span> file.
+</p>
+
+<div class="codeblock">
+<pre>
+sshguard_enable="YES"
+sshguard_danger_thresh="30"
+sshguard_release_interval="600"
+sshguard_reset_interval="7200"
+</pre>
+</div>
+
+<p>
+    Then start the service:
+</p>
+
+<div class="codeblock">
+    $ sudo service sshguard start
+</div>
+
+<p>
+    Now that we've taken the reasonble steps to secure our system, let's move on
+    to the reason we're doing this in the first place...setting up the
+    webserver!
+</p>
+
+<div id="webserver-software">
+    <h4>Webserver software</h4>
+</div>
+
+<p>
+    I'll be installing Nginx as the webserver. Nginx is flexible in that it can
+    be used to serve up static content but also reverse proxy to other services 
+    that you have on your LAN! By using Nginx as a reverse proxy, you can keep
+    a smaller attack footprint by having your other servies less exposed to the
+    internet.
 </p>
 
 <p>
