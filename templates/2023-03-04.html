@@ -155,7 +155,9 @@
 <p>
     There are a few more steps that we will want to take in order to secure our
     server. First, we want to require SSH keys and forbid using a password to
-    SSH to the server. First create an ssh key pair on your primary computer
+    SSH to the server. The reason for this is SSH keys are quite long. A lot
+    longer than you could possibly remember for a password.
+    First create an ssh key pair on your primary computer
     (not the server!) then copy the public key to the server, i.e.,
     <span style="font-family: monospace">ssh-copy-id</span>.
     Next, add the following line to the end of
@@ -380,3 +382,64 @@ sshguard_reset_interval="7200"
 <div id="closing-thoughts">
     <h4>Closing thoughts</h4>
 </div>
+
+<p>
+    It's really not hard to run your own webserver. It's also really cheap!
+    Let's have another look at the cost breakdown. We found that an equivalent
+    machine would cost $1192 per year from Amazon. Let's take a look at all of
+    the expenses to see how the two options compare in the long run.
+</p>
+
+<div  style="overflow-x: auto">
+<table>
+    <tr>
+        <th>Item</th>
+        <th>Yearly AWS Cost</th>
+        <th>Yearly Self-Host Cost</th>
+        <th>One-time Self-Host Cost</th>
+    </tr>
+    <tr>
+        <td>Computer</td>
+        <td>$1192</td>
+        <td>$0</td>
+        <td>$100</td>
+    </tr>
+    <tr>
+        <td>Domain Name</td>
+        <td>$12</td>
+        <td>$12</td>
+        <td>$0</td>
+    </tr>
+    <tr>
+        <td>Static IP address</td>
+        <td>$0</td>
+        <td>$10</td>
+        <td>$0</td>
+    </tr>
+    <tr>
+        <td>DNS record</td>
+        <td>$6</td>
+        <td>$0</td>
+        <td>$0</td>
+    </tr>
+    <tr>
+        <td><b>Total</b></td>
+        <td>$1204</td>
+        <td>$22</td>
+        <td>$100</td>
+    </tr>
+</table>
+</div>
+
+<p>
+    We see that by self hosting, we only have to pay $22 per year. With an
+    initial equipment purchase of $100, in the first year we only have to pay
+    $122 by self hosting as opposed to $1204 for AWS. Over a 3 year period
+    (a typical warenty period for IT equipment), we have an amortized cost of
+    $55 per year by self hosting, and $3612 for AWS,
+    <i>litteraly 2 orders of magnitude more expensive!</i> For that much money,
+    one could buy a <i>really</i> high end desktop or a mid-level server. One
+    must do a careful cost analysis before jumping into the cloud. There are
+    scenarios where renting computers from cloud venders does not make sense
+    economically.
+</p>
