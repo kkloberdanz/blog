@@ -156,8 +156,9 @@
     There are a few more steps that we will want to take in order to secure our
     server. First, we want to require SSH keys and forbid using a password to
     SSH to the server. The reason for this is SSH keys are quite long. A lot
-    longer than you could possibly remember for a password.
-    First create an ssh key pair on your primary computer
+    longer than you could possibly remember for a password. SSH keys are also
+    totally random data, which means that they have a lot higher entropy than
+    sensible passwords. First create an ssh key pair on your primary computer
     (not the server!) then copy the public key to the server, i.e.,
     <span style="font-family: monospace">ssh-copy-id</span>.
     Next, add the following line to the end of
