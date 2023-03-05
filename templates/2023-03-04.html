@@ -130,7 +130,7 @@
     that's what I'll discuss today. While I'm a long time Linux user, I've been
     using FreeBSD more and more lately for servers. I like that ZFS comes with
     the base operating system, the installer has easy to configure security
-    hardening, and it's network stack performance has been blowing me away! This
+    hardening, and its network stack performance has been blowing me away! This
     guide will mostly work for any Linux distro as well (and probably other
     BSDs), but this guide is targeted at FreeBSD specifically.
 </p>
@@ -156,7 +156,9 @@
     There are a few more steps that we will want to take in order to secure our
     server. First, we want to require SSH keys and forbid using a password to
     SSH to the server. First create an ssh key pair on your primary computer
-    (not the server!) Next, add the following line to the end of
+    (not the server!) then copy the public key to the server, i.e.,
+    <span style="font-family: monospace">ssh-copy-id</span>.
+    Next, add the following line to the end of
     <span style="font-family: monospace">/etc/ssh/sshd_config</span>
 </p>
 
@@ -277,7 +279,7 @@ sshguard_reset_interval="7200"
 
 <p>
     You can set any HTML files that you want to serve in the directory
-    <span style="font-family: monospace">/usr/local/www/nginx</span>
+    <span style="font-family: monospace">/usr/local/www/nginx</span>.
 </p>
 
 <div id="a-static-ip-address">
