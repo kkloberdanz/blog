@@ -34,16 +34,22 @@
         <a href="#webserver-software">Webserver software</a>
     </li>
     <li>
-        A static IP address
+        <a href="#a-static-ip-address">A static IP address</a>
     </li>
     <li>
-        A domain name
+        <a href="#a-domain-name">A domain name</a>
     </li>
     <li>
-        A DNS record
+        <a href="#a-dns-record">A DNS record</a>
     </li>
     <li>
-        Some HTML files
+        <a href="#port-forwarding">Port Forwarding</a>
+    </li>
+    <li>
+        <a href="#tls">TLS</a>
+    </li>
+    <li>
+        <a href="#closing-thoughts">Closing thoughts</a>
     </li>
 </ul>
 
@@ -53,7 +59,7 @@
 
 <p>
     In order to host a webserver, first you'll need a server! Because we don't
-    need anything too reliable we don't need to get a computer with ECC, RAID,
+    need anything too reliable, we don't need to get a computer with ECC memory
     and redundant power supplies. An old office PC will do!
 </p>
 
@@ -73,7 +79,7 @@
     c6g.xlarge, which costs $0.136 per hour. Granted, these are much newer cores
     than my machine has, but to reiterate, 3.6 GHz quad core i5 Skylake systems
     can be found on ebay for less than $100, so let's take that as a baseline.
-    Also, it's important to note that when AWS sells you a <it>vCPU</it>, they
+    Also, it's important to note that when AWS sells you a <i>vCPU</i>, they
     really mean half of a CPU, since they enable hyperthreading, and treat a
     single logical core as a single CPU, so in actually a 4 vCPU machine from
     Amazon will really be a 2 core machine.
@@ -141,7 +147,7 @@
     Towards the end of the FreeBSD installation, you'll come accross a page
     asking which security hardening features you would like to enable. Since
     this operating system is going to be exposed to the public internet, I
-    reccomend selecing <strong>all</strong> of them!
+    reccomend selecing <b>all</b> of them!
 </p>
 
 <img class="img" src="image/bsdinstall-hardening.png" />
@@ -183,10 +189,10 @@
 </div>
 
 <p>
-    The last step in hardening that we'll do is to enable sshguard. sshguard
-    is similar to Fail2Ban in Linux, and will protect your server from attackers
-    using brute force to try to SSH to your system. You can install it as
-    follows:
+    The last step in hardening that we'll do is to enable
+    <a href="https://www.sshguard.net/">sshguard</a>. sshguard is similar to
+    Fail2Ban in Linux, and will protect your server from attackers using brute
+    force to try to SSH to your system. You can install it as follows:
 </p>
 
 <div class="codeblock">
@@ -238,6 +244,137 @@ sshguard_reset_interval="7200"
 </a>
 
 <p>
-    <strong>This blog post is a work in progress. Check back in later when I
-        finish writing it!</strong>
+    To install nginx on Freebsd, simply type:
 </p>
+
+<div class="codeblock">
+    $ sudo pkg install nginx
+</div>
+
+<p>
+    From there, all you have to do to enable nginx on startup is to add the
+    following line to <span style="font-family: monospace">/etc/rc.conf</span>
+</p>
+
+<div class="codeblock">
+    nginx_enable="YES"
+</div>
+
+<p>
+    Run the following to start nginx.
+</p>
+
+<div class="codeblock">
+    $ sudo service nginx start
+</div>
+
+<p>
+    And that's all! If you go to your computer's IP address in a webbrowser, you
+    should be greeted with the following screen.
+</p>
+
+<iframe src="image/nginx.html" title="Nginx startup page" height="300" width="600" ></iframe> 
+
+<p>
+    You can set any HTML files that you want to serve in the directory
+    <span style="font-family: monospace">/usr/local/www/nginx</span>
+</p>
+
+<div id="a-static-ip-address">
+    <h4>A static IP address</h4>
+</div>
+
+<p>
+    This step is highly dependent on which internet service provider (ISP) you
+    have. I have
+    <a href="https://www.metronet.com/">Metronet</a>, and this is
+    <a href="https://support.metronet.com/hc/en-us/articles/360043558513-WHAT-IS-A-STATIC-IP-AND-HOW-DO-I-ADD-ONE-TO-MY-SERVICES-">
+        their guide</a>
+    to getting a static IP address as a part of their service. For me, it only
+    costs an additional $10 per month to have a static IP address. Well worth it
+    compared to the costs of alternatives! The way how the process worked for
+    me, is I called customer support to add a static IP address to my package.
+    After 5 business days my IP address was allocated and ready to be used. I
+    simply had to call customer support to do the cut over, and I updated my
+    router's configuration to use the static IP address. I have a TP-Link
+    router, so I followed
+    <a href="https://www.tp-link.com/us/support/faq/560/">this guide</a> for how
+    to do this on my router.
+</p>
+
+<div id="a-domain-name">
+    <h4>A domain name</h4>
+</div>
+
+<p>
+    Certainly the easiest part of this whole setup is getting a domain name. I
+    used
+    <a href="https://domains.google.com/registrar/search">Google Domains</a>
+    for my website, but there are many other registrars to choose from. Go ahead
+    and search for a domain in the search bar in the link to see if it's
+    available. Then you simply purchase the domain name!
+</p>
+
+<p>
+    Once you have your domain name, you must now update Nginx to use that domain
+    name as the <span style="font-family: monospace;">server_name</span>. Edit
+    the file
+    <span style="font-family: monospace;">/usr/local/etc/nginx/nginx.conf</span>
+    and change <span style="font-family: monospace;">server_name</span> to your
+    domain name.
+</p>
+
+<div id="a-dns-record">
+    <h4>A DNS record</h4>
+</div>
+
+<p>
+    After buying your domain name, you'll need to create a DNS entry to point to
+    your webserver. Google makes that easy. When you click on your domain name
+    in Google Domains, there is a menu bar on the left that has a tab called
+    <i>DNS</i>. Here you can create an '<i>A</i>' record with your IP address in
+    the data field. Don't know what your IP address is? You can find that
+    <a href="https://whatismyipaddress.com/">here</a>!
+</p>
+
+<div id="port-forwarding">
+    <h4>Port Forwarding</h4>
+</div>
+
+<p>
+    You will need to forward your webserver to the open internet. In your router
+    settings, forward port 80 for HTTP and port 443 for HTTPS traffic. You can
+    also forward your SSH port too if you want to be able to SSH to your
+    server when you're away from home. Be warned however that the more ports you
+    forward, the more you're exposed to the open internet!
+</p>
+
+<div id="tls">
+    <h4>TLS</h4>
+</div>
+
+<p>
+    The last thing we'll need is to configure TLS. TLS is important to keep data
+    encrypted while it is in transport to your server. If you do not enable TLS,
+    then anyone viewing your website will get annoying messages from their
+    webbrowser saying that your website is insecure.
+    Getting a TLS certificate is free and easy. I'm using
+    <a href="https://letsencrypt.org/getting-started/">Let's Encrypt</a> for
+    mine. Navigate to <a href="https://certbot.eff.org/">Certbot</a> and fill in
+    the "Software" and "System" fields, then follow the instructions on the
+    page. I made a cronjob in
+    <span style="font-family: monospace">/etc/crontab</span> renew my
+    certificate every month like so. Certbot will also configure Nginx
+    appropriately to use your TLS certificate
+</p>
+
+<div class="codeblock">
+<pre>
+<span style="color: green"># renew certificate</span>
+<span style="color: yellow">@monthly</span>	certbot renew
+</pre>
+</div>
+
+<div id="closing-thoughts">
+    <h4>Closing thoughts</h4>
+</div>
