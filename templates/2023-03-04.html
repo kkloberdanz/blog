@@ -2,7 +2,7 @@
 <h5>04 March 2023</h5>
 <img class="img" src="image/home-server.jpg" />
 <p>
-    Nowdays, most people will reccomend that you "go to the cloud" for all of
+    Nowadays, most people will recommend that you "go to the cloud" for all of
     your computing needs. While this advice might work for a lot of businesses,
     the cloud can be pretty expensive, especially for individuals who don't need
     constant uptime for their blog. There's also free hosting options for static
@@ -116,7 +116,7 @@
 </div>
 
 <p>
-    Over the standard three year warenty period of enterprise computer hardware,
+    Over the standard three year warranty period of enterprise computer hardware,
     that brings us to $3576. At that rate, you might as well buy yourself a nice
     shiny brand-new enterprise grade server!
 </p>
@@ -136,18 +136,18 @@
 </p>
 
 <p>
-    You can find many guides for installing FreeBSD. I reccomend looking at the
+    You can find many guides for installing FreeBSD. I recommend looking at the
     <a href="https://docs.freebsd.org/en/books/handbook/bsdinstall/">official documentation</a>
-    first. I also reccomend literally every book by
+    first. I also recommend literally every book by
     <a href="https://mwl.io/">Michael W. Lucas</a>, and in this particular case
     <a href="https://nostarch.com/absfreebsd3">Absolute FreeBSD</a>.
 </p>
 
 <p>
-    Towards the end of the FreeBSD installation, you'll come accross a page
+    Towards the end of the FreeBSD installation, you'll come across a page
     asking which security hardening features you would like to enable. Since
     this operating system is going to be exposed to the public internet, I
-    reccomend selecing <b>all</b> of them!
+    recommend selecting <b>all</b> of them!
 </p>
 
 <img class="img" src="image/bsdinstall-hardening.png" />
@@ -170,7 +170,7 @@
 
 <p>
     Most SSH attempts happen on port 22. If we change the system's ssh port, we
-    can block a lot oc script kitties and automated attacks that look for an
+    can block a lot of script kiddies and automated attacks that look for an
     easy target. Changing the port that SSH listens to is security by obscurity.
     Meaning that it is not good security by itself, but it will at least cut
     down on the amount of SSH attempts you'll see from unsophisticated
@@ -226,7 +226,7 @@ sshguard_reset_interval="7200"
 </div>
 
 <p>
-    Now that we've taken the reasonble steps to secure our system, let's move on
+    Now that we've taken the reasonable steps to secure our system, let's move on
     to the reason we're doing this in the first place...setting up the
     webserver!
 </p>
@@ -240,7 +240,7 @@ sshguard_reset_interval="7200"
     webserver. Nginx is flexible in that it can be used to serve up static
     content but also reverse proxy to other services that you have on your LAN!
     By using Nginx as a reverse proxy, you can keep a smaller attack footprint
-    by having your other servies less exposed to the internet.
+    by having your other services less exposed to the internet.
 </p>
 
 <a href="https://nginx.org/en/">
@@ -248,7 +248,7 @@ sshguard_reset_interval="7200"
 </a>
 
 <p>
-    To install nginx on Freebsd, simply type:
+    To install nginx on FreeBSD, simply type:
 </p>
 
 <div class="codeblock">
@@ -273,7 +273,7 @@ sshguard_reset_interval="7200"
 </div>
 
 <p>
-    And that's all! If you go to your computer's IP address in a webbrowser, you
+    And that's all! If you go to your computer's IP address in a web browser, you
     should be greeted with the following screen.
 </p>
 
@@ -435,11 +435,11 @@ sshguard_reset_interval="7200"
     We see that by self hosting, we only have to pay $22 per year. With an
     initial equipment purchase of $100, in the first year we only have to pay
     $122 by self hosting as opposed to $1204 for AWS. Over a 3 year period
-    (a typical warenty period for IT equipment), we have an amortized cost of
+    (a typical warranty period for IT equipment), we have an amortized cost of
     $55 per year by self hosting, and $3612 for AWS,
-    <i>litteraly 2 orders of magnitude more expensive!</i> For that much money,
+    <i>literally 2 orders of magnitude more expensive!</i> For that much money,
     one could buy a <i>really</i> high end desktop or a mid-level server. One
     must do a careful cost analysis before jumping into the cloud. There are
-    scenarios where renting computers from cloud venders does not make sense
+    scenarios where renting computers from cloud vendors does not make sense
     economically.
 </p>
