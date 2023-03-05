@@ -274,6 +274,21 @@ sshguard_reset_interval="7200"
 </div>
 
 <p>
+    By default, nginx uses only a single core. We can change that by adjusting
+    the number of <span style="font-family: monospace;">worker_processes</span>
+    to the number of CPU cores in our server. Open
+    <span style="font-family: monospace;">/usr/local/etc/nginx/nginx.conf</span>
+    and change <span style="font-family: monospace;">worker_processes</span>
+    accordingly.
+</p>
+
+<div class="codeblock">
+<pre>
+<span style="color: cyan">worker_processes</span>  4;
+</pre>
+</div>
+
+<p>
     Run the following to start nginx.
 </p>
 
@@ -386,7 +401,7 @@ sshguard_reset_interval="7200"
     mine. Navigate to <a href="https://certbot.eff.org/">Certbot</a> and fill in
     the "Software" and "System" fields, then follow the instructions on the
     page. I made a cronjob in
-    <span style="font-family: monospace">/etc/crontab</span> renew my
+    <span style="font-family: monospace">/etc/crontab</span> to renew my
     certificate every month like so. Certbot will also configure Nginx
     appropriately to use your TLS certificate
 </p>
