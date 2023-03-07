@@ -14,9 +14,7 @@
     to host a webserver!
 </p>
 
-<h4>
-    What you'll need
-</h4>
+<h4>What you'll need</h4>
 
 <p>
     What you need breaks down into these items. I'll go into detail for each one
@@ -54,9 +52,9 @@
 </ul>
 
 <a href="#a-computer">
-<div id="a-computer">
-    <h4>A computer</h4>
-</div>
+    <div id="a-computer">
+        <h4>A computer</h4>
+    </div>
 </a>
 
 <p>
@@ -68,7 +66,10 @@
 <p>
     I picked up my computer, a Dell OptiPlex 980, from a University surplus sale
     several years ago. This sweet rig packs a first generation
-    <a href="https://ark.intel.com/content/www/us/en/ark/products/42915/intel-core-i5750-processor-8m-cache-2-66-ghz.html">i5-750</a>
+    <a
+        href="https://ark.intel.com/content/www/us/en/ark/products/42915/intel-core-i5750-processor-8m-cache-2-66-ghz.html"
+        >i5-750</a
+    >
     from 2009! While you don't want to play modern AAA games on this thing, it's
     more than enough to host my blog! I paid $20 for this beast back in the day,
     but you can easily find a more modern and much more powerful machine on ebay
@@ -77,7 +78,7 @@
 </p>
 
 <p>
-    The cheapest EC2 instance I could find that matches these specs is a 
+    The cheapest EC2 instance I could find that matches these specs is a
     c6g.xlarge, which costs $0.136 per hour. Granted, these are much newer cores
     than my machine has, but to reiterate, 3.6 GHz quad core i5 Skylake systems
     can be found on ebay for less than $100, so let's take that as a baseline.
@@ -87,25 +88,25 @@
     Amazon will really be a 2 core machine.
 </p>
 
-<div  style="overflow-x: auto">
-<table>
-    <tr>
-        <th>Instance Name</th>
-        <th>On-Demand Hourly Rate</th>
-        <th>vCPU</th>
-        <th>Memory</th>
-        <th>Storage</th>
-        <th>Network Performance</th>
-    </tr>
-    <tr>
-        <td>c6g.xlarge</td>
-        <td>$0.136</td>
-        <td>4</td>
-        <td>8 GiB</td>
-        <td>EBS Only</td>
-        <td>Up to 10 Gigabit</td>
-    </tr>
-</table>
+<div style="overflow-x: auto">
+    <table>
+        <tr>
+            <th>Instance Name</th>
+            <th>On-Demand Hourly Rate</th>
+            <th>vCPU</th>
+            <th>Memory</th>
+            <th>Storage</th>
+            <th>Network Performance</th>
+        </tr>
+        <tr>
+            <td>c6g.xlarge</td>
+            <td>$0.136</td>
+            <td>4</td>
+            <td>8 GiB</td>
+            <td>EBS Only</td>
+            <td>Up to 10 Gigabit</td>
+        </tr>
+    </table>
 </div>
 
 <p>
@@ -118,15 +119,15 @@
 </div>
 
 <p>
-    Over the standard three year warranty period of enterprise computer hardware,
-    that brings us to $3576. At that rate, you might as well buy yourself a nice
-    shiny brand-new enterprise grade server!
+    Over the standard three year warranty period of enterprise computer
+    hardware, that brings us to $3576. At that rate, you might as well buy
+    yourself a nice shiny brand-new enterprise grade server!
 </p>
 
 <a href="#an-operating-system">
-<div id="an-operating-system">
-    <h4>An operating system</h4>
-</div>
+    <div id="an-operating-system">
+        <h4>An operating system</h4>
+    </div>
 </a>
 
 <p>
@@ -141,7 +142,9 @@
 
 <p>
     You can find many guides for installing FreeBSD. I recommend looking at the
-    <a href="https://docs.freebsd.org/en/books/handbook/bsdinstall/">official documentation</a>
+    <a href="https://docs.freebsd.org/en/books/handbook/bsdinstall/"
+        >official documentation</a
+    >
     first. I also recommend literally every book by
     <a href="https://mwl.io/">Michael W. Lucas</a>, and in this particular case
     <a href="https://nostarch.com/absfreebsd3">Absolute FreeBSD</a>.
@@ -163,17 +166,14 @@
     longer than you could possibly remember for a password. SSH keys are also
     totally random data, which means that they have a lot higher entropy than
     sensible passwords, so it is <i>much much</i> harder to brute force an SSH
-    key than it is a password.
-    First create an ssh key pair on your primary computer
-    (not the server!) then copy the public key to the server, i.e.,
-    <span style="font-family: monospace">ssh-copy-id</span>.
-    Next, add the following line to the end of
+    key than it is a password. First create an ssh key pair on your primary
+    computer (not the server!) then copy the public key to the server, i.e.,
+    <span style="font-family: monospace">ssh-copy-id</span>. Next, add the
+    following line to the end of
     <span style="font-family: monospace">/etc/ssh/sshd_config</span>
 </p>
 
-<div class="codeblock">
-    ChallengeResponseAuthentication no
-</div>
+<div class="codeblock">ChallengeResponseAuthentication no</div>
 
 <p>
     Most SSH attempts happen on port 22. If we change the system's ssh port, we
@@ -187,17 +187,11 @@
     instead have a different number, such as:
 </p>
 
-<div class="codeblock">
-    Port 1234
-</div>
+<div class="codeblock">Port 1234</div>
 
-<p>
-    For these changes to take effect, restart the SSH service.
-</p>
+<p>For these changes to take effect, restart the SSH service.</p>
 
-<div class="codeblock">
-    $ sudo service sshd restart
-</div>
+<div class="codeblock">$ sudo service sshd restart</div>
 
 <p>
     The last step in hardening that we'll do is to enable
@@ -206,43 +200,41 @@
     force to try to SSH to your system. You can install it as follows:
 </p>
 
-<div class="codeblock">
-    $ sudo pkg install sshguard
-</div>
+<div class="codeblock">$ sudo pkg install sshguard</div>
 
 <p>
     To enable sshguard, you'll have to add
-    <a href="https://web.archive.org/web/20211026183134/https://forums.freebsd.org/threads/howto-set-up-and-configure-security-sshguard-pf.39196/">these line</a>
+    <a
+        href="https://web.archive.org/web/20211026183134/https://forums.freebsd.org/threads/howto-set-up-and-configure-security-sshguard-pf.39196/"
+        >these line</a
+    >
     to your <span style="font-family: monospace">/etc/rc.conf</span> file.
 </p>
 
 <div class="codeblock">
-<pre>
+    <pre>
 sshguard_enable="YES"
 sshguard_danger_thresh="30"
 sshguard_release_interval="600"
 sshguard_reset_interval="7200"
-</pre>
+</pre
+    >
 </div>
 
-<p>
-    Then start the service:
-</p>
+<p>Then start the service:</p>
 
-<div class="codeblock">
-    $ sudo service sshguard start
-</div>
+<div class="codeblock">$ sudo service sshguard start</div>
 
 <p>
-    Now that we've taken the reasonable steps to secure our system, let's move on
-    to the reason we're doing this in the first place...setting up the
+    Now that we've taken the reasonable steps to secure our system, let's move
+    on to the reason we're doing this in the first place...setting up the
     webserver!
 </p>
 
 <a href="#webserver-software">
-<div id="webserver-software">
-    <h4>Webserver software</h4>
-</div>
+    <div id="webserver-software">
+        <h4>Webserver software</h4>
+    </div>
 </a>
 
 <p>
@@ -254,55 +246,59 @@ sshguard_reset_interval="7200"
 </p>
 
 <a href="https://nginx.org/en/">
-<img class="img" src="image/nginx.png" style="width: 25%; margin-left: auto; margin-right: auto; display: block"/>
+    <img
+        class="img"
+        src="image/nginx.png"
+        style="
+            width: 25%;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        "
+    />
 </a>
 
-<p>
-    To install nginx on FreeBSD, simply type:
-</p>
+<p>To install nginx on FreeBSD, simply type:</p>
 
-<div class="codeblock">
-    $ sudo pkg install nginx
-</div>
+<div class="codeblock">$ sudo pkg install nginx</div>
 
 <p>
     From there, all you have to do to enable nginx on startup is to add the
     following line to <span style="font-family: monospace">/etc/rc.conf</span>
 </p>
 
-<div class="codeblock">
-    nginx_enable="YES"
-</div>
+<div class="codeblock">nginx_enable="YES"</div>
 
 <p>
     By default, nginx uses only a single core. We can change that by adjusting
-    the number of <span style="font-family: monospace;">worker_processes</span>
+    the number of <span style="font-family: monospace">worker_processes</span>
     to the number of CPU cores in our server. Open
-    <span style="font-family: monospace;">/usr/local/etc/nginx/nginx.conf</span>
-    and change <span style="font-family: monospace;">worker_processes</span>
+    <span style="font-family: monospace">/usr/local/etc/nginx/nginx.conf</span>
+    and change <span style="font-family: monospace">worker_processes</span>
     accordingly.
 </p>
 
 <div class="codeblock">
-<pre>
+    <pre>
 <span style="color: cyan">worker_processes</span>  4;
 </pre>
 </div>
 
-<p>
-    Run the following to start nginx.
-</p>
+<p>Run the following to start nginx.</p>
 
-<div class="codeblock">
-    $ sudo service nginx start
-</div>
+<div class="codeblock">$ sudo service nginx start</div>
 
 <p>
-    And that's all! If you go to your computer's IP address in a web browser, you
-    should be greeted with the following screen.
+    And that's all! If you go to your computer's IP address in a web browser,
+    you should be greeted with the following screen.
 </p>
 
-<iframe src="image/nginx.html" title="Nginx startup page" height="300" width="600" ></iframe> 
+<iframe
+    src="image/nginx.html"
+    title="Nginx startup page"
+    height="300"
+    width="600"
+></iframe>
 
 <p>
     You can set any HTML files that you want to serve in the directory
@@ -310,17 +306,20 @@ sshguard_reset_interval="7200"
 </p>
 
 <a href="#a-static-ip-address">
-<div id="a-static-ip-address">
-    <h4>A static IP address</h4>
-</div>
+    <div id="a-static-ip-address">
+        <h4>A static IP address</h4>
+    </div>
 </a>
 
 <p>
     This step is highly dependent on which internet service provider (ISP) you
     have. I have
     <a href="https://www.metronet.com/">Metronet</a>, and this is
-    <a href="https://support.metronet.com/hc/en-us/articles/360043558513-WHAT-IS-A-STATIC-IP-AND-HOW-DO-I-ADD-ONE-TO-MY-SERVICES-">
-        their guide</a>
+    <a
+        href="https://support.metronet.com/hc/en-us/articles/360043558513-WHAT-IS-A-STATIC-IP-AND-HOW-DO-I-ADD-ONE-TO-MY-SERVICES-"
+    >
+        their guide</a
+    >
     to getting a static IP address as a part of their service. For me, it only
     costs an additional $10 per month to have a static IP address. Well worth it
     compared to the costs of alternatives! The way how the process worked for
@@ -334,9 +333,9 @@ sshguard_reset_interval="7200"
 </p>
 
 <a href="#a-domain-name">
-<div id="a-domain-name">
-    <h4>A domain name</h4>
-</div>
+    <div id="a-domain-name">
+        <h4>A domain name</h4>
+    </div>
 </a>
 
 <p>
@@ -350,17 +349,17 @@ sshguard_reset_interval="7200"
 
 <p>
     Once you have your domain name, you must now update Nginx to use that domain
-    name as the <span style="font-family: monospace;">server_name</span>. Edit
+    name as the <span style="font-family: monospace">server_name</span>. Edit
     the file
-    <span style="font-family: monospace;">/usr/local/etc/nginx/nginx.conf</span>
-    and change <span style="font-family: monospace;">server_name</span> to your
+    <span style="font-family: monospace">/usr/local/etc/nginx/nginx.conf</span>
+    and change <span style="font-family: monospace">server_name</span> to your
     domain name.
 </p>
 
 <a href="#a-dns-record">
-<div id="a-dns-record">
-    <h4>A DNS record</h4>
-</div>
+    <div id="a-dns-record">
+        <h4>A DNS record</h4>
+    </div>
 </a>
 
 <p>
@@ -373,31 +372,31 @@ sshguard_reset_interval="7200"
 </p>
 
 <a href="#port-forwarding">
-<div id="port-forwarding">
-    <h4>Port Forwarding</h4>
-</div>
+    <div id="port-forwarding">
+        <h4>Port Forwarding</h4>
+    </div>
 </a>
 
 <p>
     You will need to forward your webserver to the open internet. In your router
     settings, forward port 80 for HTTP and port 443 for HTTPS traffic. You can
-    also forward your SSH port too if you want to be able to SSH to your
-    server when you're away from home. Be warned however that the more ports you
+    also forward your SSH port too if you want to be able to SSH to your server
+    when you're away from home. Be warned however that the more ports you
     forward, the more you're exposed to the open internet!
 </p>
 
 <a href="#tls">
-<div id="tls">
-    <h4>TLS</h4>
-</div>
+    <div id="tls">
+        <h4>TLS</h4>
+    </div>
 </a>
 
 <p>
     The last thing we'll need is to configure TLS. TLS is important to keep data
     encrypted while it is in transport to your server. If you do not enable TLS,
     then anyone viewing your website will get annoying messages from their
-    webbrowser saying that your website is insecure.
-    Getting a TLS certificate is free and easy. I'm using
+    webbrowser saying that your website is insecure. Getting a TLS certificate
+    is free and easy. I'm using
     <a href="https://letsencrypt.org/getting-started/">Let's Encrypt</a> for
     mine. Navigate to <a href="https://certbot.eff.org/">Certbot</a> and fill in
     the "Software" and "System" fields, then follow the instructions on the
@@ -408,16 +407,16 @@ sshguard_reset_interval="7200"
 </p>
 
 <div class="codeblock">
-<pre>
+    <pre>
 <span style="color: green"># renew certificate</span>
 <span style="color: yellow">@monthly</span>	certbot renew
 </pre>
 </div>
 
 <a href="#closing-thoughts">
-<div id="closing-thoughts">
-    <h4>Closing thoughts</h4>
-</div>
+    <div id="closing-thoughts">
+        <h4>Closing thoughts</h4>
+    </div>
 </a>
 
 <p>
@@ -427,53 +426,53 @@ sshguard_reset_interval="7200"
     the expenses to see how the two options compare in the long run.
 </p>
 
-<div  style="overflow-x: auto">
-<table>
-    <tr>
-        <th>Item</th>
-        <th>Yearly AWS Cost</th>
-        <th>Yearly Self-Host Cost</th>
-        <th>One-time Self-Host Cost</th>
-    </tr>
-    <tr>
-        <td>Computer</td>
-        <td>$1192</td>
-        <td>$0</td>
-        <td>$100</td>
-    </tr>
-    <tr>
-        <td>Domain Name</td>
-        <td>$12</td>
-        <td>$12</td>
-        <td>$0</td>
-    </tr>
-    <tr>
-        <td>Static IP address</td>
-        <td>$0</td>
-        <td>$120</td>
-        <td>$0</td>
-    </tr>
-    <tr>
-        <td>DNS record</td>
-        <td>$6</td>
-        <td>$0</td>
-        <td>$0</td>
-    </tr>
-    <tr>
-        <td><b>Total</b></td>
-        <td>$1210</td>
-        <td>$132</td>
-        <td>$100</td>
-    </tr>
-</table>
+<div style="overflow-x: auto">
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Yearly AWS Cost</th>
+            <th>Yearly Self-Host Cost</th>
+            <th>One-time Self-Host Cost</th>
+        </tr>
+        <tr>
+            <td>Computer</td>
+            <td>$1192</td>
+            <td>$0</td>
+            <td>$100</td>
+        </tr>
+        <tr>
+            <td>Domain Name</td>
+            <td>$12</td>
+            <td>$12</td>
+            <td>$0</td>
+        </tr>
+        <tr>
+            <td>Static IP address</td>
+            <td>$0</td>
+            <td>$120</td>
+            <td>$0</td>
+        </tr>
+        <tr>
+            <td>DNS record</td>
+            <td>$6</td>
+            <td>$0</td>
+            <td>$0</td>
+        </tr>
+        <tr>
+            <td><b>Total</b></td>
+            <td>$1210</td>
+            <td>$132</td>
+            <td>$100</td>
+        </tr>
+    </table>
 </div>
 
 <p>
     We see that by self hosting, we only have to pay $132 per year. With an
     initial equipment purchase of $100, in the first year we only have to pay
-    $232 by self hosting as opposed to $1210 for AWS. Over a 3 year period
-    (a typical warranty period for IT equipment), we have an amortized cost of
-    $165 per year by self hosting, and $3612 for AWS,
+    $232 by self hosting as opposed to $1210 for AWS. Over a 3 year period (a
+    typical warranty period for IT equipment), we have an amortized cost of $165
+    per year by self hosting, and $3612 for AWS,
     <i>literally an order of magnitude more expensive!</i> For that much money,
     one could buy a <i>really</i> high end desktop or a mid-level server. One
     must do a careful cost analysis before jumping into the cloud. There are
