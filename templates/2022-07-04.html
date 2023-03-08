@@ -13,9 +13,7 @@
     as it doesn't hinder readability.
 </p>
 
-<p>
-    Today, we'll be taking a look at:
-</p>
+<p>Today, we'll be taking a look at:</p>
 <ul>
     <li>e<sup>x</sup></li>
     <li>Natural Logarithms</li>
@@ -33,16 +31,10 @@
     generalized by the exponential function, namely the exponential function
     evaluated at 1
 </p>
-<div class="codeblock">
-    exp(1) = e
-</div>
+<div class="codeblock">exp(1) = e</div>
 
-<p>
-    More generally,
-</p>
-<div class="codeblock">
-    exp(x) = e^x
-</div>
+<p>More generally,</p>
+<div class="codeblock">exp(x) = e^x</div>
 
 <p>
     The exponential function is conveniently defined by a Taylor Series, which
@@ -130,9 +122,7 @@
     that the following is true.
 </p>
 
-<div class="codeblock">
-    a^x * a^y = a^(x + y)
-</div>
+<div class="codeblock">a^x * a^y = a^(x + y)</div>
 
 <p>
     Given this property, if we want to compute x<sup>100</sup>, we don't have to
@@ -263,9 +253,7 @@
 }</pre>
 </div>
 
-<p>
-    And that's all there is to it!
-</p>
+<p>And that's all there is to it!</p>
 
 <p>
     Now that we've covered exponentiation, let's take a look at its inverse,
@@ -299,9 +287,7 @@
     </pre>
 </div>
 
-<p>
-    Next, to satisfy Newton's Method, we will need to find its derivative.
-</p>
+<p>Next, to satisfy Newton's Method, we will need to find its derivative.</p>
 
 <div class="codeblock">
     <pre>
@@ -368,9 +354,7 @@
     </pre>
 </div>
 
-<p>
-    Using Python, let's convert this mask into hex.
-</p>
+<p>Using Python, let's convert this mask into hex.</p>
 
 <div class="codeblock">
     <pre><font color="#008700">In [</font><font color="#586E75"><b>1</b></font><font color="#008700">]: hex</font>(<font color="#008700">0b00111111100000000000000000000000</font>)
@@ -439,9 +423,7 @@
 </pre>
 </div>
 
-<p>
-    Putting this together, let's wrap log up into an easy to use function.
-</p>
+<p>Putting this together, let's wrap log up into an easy to use function.</p>
 <div class="codeblock">
     <pre><font color="#4E9A06">float</font> mylogf(<font color="#4E9A06">float</font> x) {
     <font color="#AF5F00">if</font> (x &lt; <font color="#CC0000">0</font>) {
@@ -459,9 +441,7 @@
 </pre>
 </div>
 
-<p>
-    But wait, there's more!
-</p>
+<p>But wait, there's more!</p>
 
 <p>
     Now that we have exp and log, we can get sqrt for free by exploiting a
