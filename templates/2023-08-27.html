@@ -1,0 +1,98 @@
+<h2 class="posttitle">Setting Up Postgresql on FreeBSD 13.2</h2>
+<h5>27 August 2023</h5>
+<pre>
+kyle@klover0004:~ $ sudo pkg install -y postgresql15-server postgresql15-client
+To run PostgreSQL at startup, add
+'postgresql_enable="YES"' to /etc/rc.conf
+
+As root:
+# /usr/local/etc/rc.d/postgresql initdb
+
+Success. You can now start the database server using:
+
+    /usr/local/bin/pg_ctl -D /var/db/postgres/data15 -l logfile start
+
+# su postgres
+$ /usr/local/bin/pg_ctl -D /var/db/postgres/data15 -l logfile start
+$ service postgresql start
+$ service postgresql status
+# cd /var/db/postgres/data15/
+# vim pg_hba.conf
+
+root@klover0004:/var/db/postgres/data15 # vim postgresql.conf
+listen_addresses = '*'          # what IP address(es) to listen on;
+
+kyle@klover0004:~ $ sudo service postgresql restart
+
+Update pg_hba.conf from this:
+#host    all             all             127.0.0.1/32            trust
+To this:
+host    all             all             0.0.0.0/0            scram-sha-256
+
+# service postgresql restart
+# su - postgres
+$ psql
+postgres=# \password postgres
+
+postgres=# create database sphere_db;
+CREATE DATABASE
+
+postgres=# create user sphere_admin with encrypted password '${SPHERE_ADMIN_PASSWORD}';
+postgres=# create user sphere_user with encrypted password '${SPHERE_USER_PASSWORD}';
+
+postgres=# grant all privileges on database sphere_db to sphere_admin;
+GRANT
+
+postgres=# GRANT ALL ON DATABASE sphere_db TO sphere_admin;
+postgres=# ALTER DATABASE sphere_db OWNER TO sphere_admin;
+
+$ sudo su - postgres
+$ psql -U sphere_admin -d sphere_db -W
+sphere_db=> create table posts (id uuid PRIMARY KEY, username text, msg text, upvotes bigint, "date_created" timestamp not null default CURRENT_TIMESTAMP, weight double precision);
+sphere_db=> GRANT SELECT ON posts TO sphere_user;
+GRANT
+
+GRANT SELECT ON posts TO sphere_user;
+GRANT UPDATE ON posts TO sphere_user;
+GRANT INSERT ON posts TO sphere_user;
+
+To connect:
+$ psql postgres://sphere_user:${SPHERE_USER_PASSWORD}@192.168.0.176:5432/sphere_db
+
+sphere_db=> insert into posts (id, msg, upvotes, weight) values('50881e30-4f1a-4b57-97f3-10c1961c82e9', 'another test message', 2, 2.0);
+sphere_db=> create table userlogin (username text PRIMARY KEY, token text, "token_expiration" timestamp not null default CURRENT_TIMESTAMP + INTERVAL '1 MONTH', password_bcrypt text, salt text);
+
+GRANT SELECT ON userlogin TO sphere_user;
+GRANT UPDATE ON userlogin TO sphere_user;
+GRANT INSERT ON userlogin TO sphere_user;
+
+sphere_db=> create table files (id uuid PRIMARY KEY, filetype text, post_id uuid, path text, "date_created" timestamp not null default CURRENT_TIMESTAMP);
+
+GRANT SELECT ON files TO sphere_user;
+GRANT UPDATE ON files TO sphere_user;
+GRANT INSERT ON files TO sphere_user;
+
+SELECT posts.username, posts.msg, files.id
+        FROM posts LEFT JOIN files ON posts.id=files.post_id
+        ORDER BY weight, posts.date_created DESC;
+
+sphere_db=> create table comments (id uuid PRIMARY KEY, post_id uuid, username text, msg text, upvotes bigint, "date_created" timestamp not null default CURRENT_TIMESTAMP, weight double precision);
+
+GRANT SELECT ON comments TO sphere_user;
+GRANT UPDATE ON comments TO sphere_user;
+GRANT INSERT ON comments TO sphere_user;
+
+CREATE TABLE inbox (
+    id uuid PRIMARY KEY,
+    post_id uuid,
+    username text,
+    msg text,
+    read boolean,
+    "date_created" timestamp not null default CURRENT_TIMESTAMP
+);
+
+GRANT SELECT ON inbox TO sphere_user;
+GRANT UPDATE ON inbox TO sphere_user;
+GRANT INSERT ON inbox TO sphere_user;
+
+</pre>
