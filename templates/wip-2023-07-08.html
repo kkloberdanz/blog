@@ -1,0 +1,488 @@
+<h2 class="posttitle">I still like C</h2>
+<h5>04 July 2022</h5>
+<img class="img" src="image/exp.svg" />
+<p>
+    In programming, we use a lot of mathematical functions and operations
+    without thinking much about how they work, or how they're implemented. In
+    this post, I'm going to walk through and explain how one <b><i>could</i></b>
+    implement a few common math functions. The implementations here are not
+    taken from any particular library. Standard library implementations of math
+    functions are commonly highly optimized and can sometimes be hard to read.
+    The purpose of this blog post is to make the code very readable and
+    understandable, with some performance optimizations sprinkled on top so long
+    as it doesn't hinder readability.
+</p>
+
+<p>Today, we'll be taking a look at:</p>
+<ul>
+    <li>e<sup>x</sup></li>
+    <li>Natural Logarithms</li>
+    <li>Square Root</li>
+    <li>Power</li>
+</ul>
+
+<p>
+    Let's start by looking at one of the most useful numbers in existence,
+    <i>e</i>.
+</p>
+
+<p>
+    Euler's number, or <i>e</i> is a mathematical constant that is better
+    generalized by the exponential function, namely the exponential function
+    evaluated at 1
+</p>
+<div class="codeblock">exp(1) = e</div>
+
+<p>More generally,</p>
+<div class="codeblock">exp(x) = e^x</div>
+
+<p>
+    The exponential function is conveniently defined by a Taylor Series, which
+    we can see below.
+</p>
+<img class="img" src="image/exp_x.svg" />
+
+<p>
+    In Computer Science, we have the awful conundrum of trying to simulate real
+    mathematics (i.e., operations on real numbers) with finite precision. We
+    attempt to approximate fields with infinite precision with finite precision
+    constructs such as floating point numbers, which fail to meet even the basic
+    group axioms (e.g., associativity). Such a conundrum means that for most
+    scientific computing work, we must make do with approximations of real
+    numbers.
+</p>
+
+<p>
+    Fortunately, in this case, <i>exp(x)</i> is a convergent series, and
+    therefore we can approximate the true result with a finite number of terms
+    from the Taylor Series.
+</p>
+
+<p>
+    Let's use this Taylor Series to implement the exponential function in C. The
+    first thing that we can notice from the definition of
+    <i>exp(x)</i> is that the divisors are all constant values. This means that
+    we can compute them ahead of time, which can save us some CPU cycles. We'll
+    start by generating a table of the pre-computed denominators. For this post,
+    we'll stick to purely 32 bit single precision IEEE-754 floating point
+    representations, hence the <i>f</i> suffix to each number. We'll also keep
+    everything 32 byte aligned so that we can use AVX operations on this array.
+</p>
+
+<div class="codeblock">
+    <pre><font color="#4E9A06">static</font> <font color="#4E9A06">const</font> <font color="#4E9A06">float</font> EXPF_DIVISORS[] __attribute__((aligned(<font color="#CC0000">32</font>))) = { 
+    <font color="#CC0000">2.0f</font>,
+    <font color="#CC0000">6.0f</font>,
+    <font color="#CC0000">24.0f</font>,
+    <font color="#CC0000">120.0f</font>,
+    <font color="#CC0000">720.0f</font>,
+    <font color="#CC0000">5040.0f</font>,
+    <font color="#CC0000">40320.0f</font>,
+    <font color="#CC0000">362880.0f</font>,
+    <font color="#CC0000">3628800.0f</font>,
+    <font color="#CC0000">39916800.0f</font>,
+    <font color="#CC0000">479001600.0f</font>,
+    <font color="#CC0000">6227020800.0f</font>,
+    <font color="#CC0000">87178291200.0f</font>,
+    <font color="#CC0000">1307674368000.0f</font>,
+    <font color="#CC0000">20922789888000.0f</font>,
+    <font color="#CC0000">355687428096000.0f</font>,
+    <font color="#CC0000">6402373705728000.0f</font>,
+    <font color="#CC0000">121645100408832000.0f</font>,
+    <font color="#CC0000">2432902008176640000.0f</font>,
+    <font color="#CC0000">51090942171709440000.0f</font>,
+    <font color="#CC0000">1124000727777607680000.0f</font>,
+    <font color="#CC0000">25852016738884976640000.0f</font>,
+    <font color="#CC0000">620448401733239439360000.0f</font>,
+    <font color="#CC0000">15511210043330985984000000.0f</font>,
+    <font color="#CC0000">403291461126605635584000000.0f</font>,
+    <font color="#CC0000">10888869450418352160768000000.0f</font>,
+    <font color="#CC0000">304888344611713860501504000000.0f</font>,
+    <font color="#CC0000">8841761993739701954543616000000.0f</font>,
+    <font color="#CC0000">265252859812191058636308480000000.0f</font>,
+    <font color="#CC0000">8222838654177922817725562880000000.0f</font>,
+    <font color="#CC0000">263130836933693530167218012160000000.0f</font>,
+    <font color="#CC0000">8683317618811886495518194401280000000.0f</font>
+};
+    </pre>
+</div>
+
+<p>
+    Now that we have precomputed this table of denominators, we can get into the
+    meat and potatoes of this algorithm, the Taylor Series. Based on the formula
+    for <i>exp(x)</i>, we will be raising <i>x</i> to a power in each term. One
+    thing we can see right away however, is that the power is always an integer.
+    This is an important point to notice for optimization purposes, because this
+    means we can use repeated multiplication (which is fast) instead of the
+    <i>pow()</i> function (which is slow).
+</p>
+
+<p>
+    Another interesting note, there is a very useful property of exponents such
+    that the following is true.
+</p>
+
+<div class="codeblock">a^x * a^y = a^(x + y)</div>
+
+<p>
+    Given this property, if we want to compute x<sup>100</sup>, we don't have to
+    perform <i>x * x * x * x * ... * x</i> one hundred times if we already have
+    other powers of <i>x</i> computed! For example, if we already have x<sup
+        >50</sup
+    >
+    computed, we can simply perform
+    <i>x<sup>50</sup> * x<sup>50</sup> = x<sup>100</sup></i>
+</p>
+
+<p>
+    Concretely, for this implementation we can first find
+    <x>x<sup>2</sup> = x * x</x>, then
+    <i>x<sup>3</sup> = x<sup>2</sup> * x</i> and
+    <i>x<sup>4</sup> = x<sup>2</sup> * x<sup>2</sup></i>
+    and so on. This also has the benefit of better extracting instruction level
+    parallelism from the CPU. Modern CPUs are pipelined and super-scalar, which
+    means that they will have multiple independent units working simultaneously
+    so long as there aren't explicit dependencies between units of work. By
+    minimizing the amount of dependencies between variables, we allow the CPU to
+    do its job of parallelizing these multiplications at the instruction level,
+    and fully utilizing the transistors we paid for!
+</p>
+
+<p>
+    After computing all of the numerators, we can then perform the divisions.
+    I'm writing this on an x86_64 machine, so I'll be using AVX SIMD intrinsics
+    to speed up the computation by performing 8 divisions at a time. Let's see
+    these concepts in action.
+</p>
+
+<div class="codeblock">
+    <pre><font color="#4E9A06">static</font> <font color="#4E9A06">float</font> myexpf(<font color="#4E9A06">float</font> x) {
+    <font color="#4E9A06">size_t</font> i;
+    <font color="#4E9A06">float</font> numerators[<font color="#CC0000">32</font>] __attribute__((aligned(<font color="#CC0000">32</font>)));
+    <font color="#4E9A06">float</font> result[<font color="#CC0000">32</font>] __attribute__((aligned(<font color="#CC0000">32</font>)));
+
+    <font color="#4E9A06">double</font> acc = <font color="#CC0000">1.0</font> + x;
+
+    <font color="#3465A4">/* order of operations with floats is important. It&apos;s best to</font>
+<font color="#3465A4">     * multiply terms of similar orders of magnitude to avoid loss in</font>
+<font color="#3465A4">     * precision. */</font>
+    <font color="#4E9A06">float</font> x2 = x * x;
+    <font color="#4E9A06">float</font> x3 = x2 * x;
+    <font color="#4E9A06">float</font> x4 = x2 * x2;
+    <font color="#4E9A06">float</font> x5 = x2 * x3;
+    <font color="#4E9A06">float</font> x6 = x3 * x3;
+    <font color="#4E9A06">float</font> x7 = x4 * x3;
+    <font color="#4E9A06">float</font> x8 = x4 * x4;
+    <font color="#4E9A06">float</font> x9 = x5 * x4;
+    <font color="#4E9A06">float</font> x10 = x5 * x5;
+    <font color="#4E9A06">float</font> x11 = x6 * x5;
+    <font color="#4E9A06">float</font> x12 = x6 * x6;
+    <font color="#4E9A06">float</font> x13 = x7 * x6;
+    <font color="#4E9A06">float</font> x14 = x7 * x7;
+    <font color="#4E9A06">float</font> x15 = x8 * x7;
+    <font color="#4E9A06">float</font> x16 = x8 * x8;
+    <font color="#4E9A06">float</font> x17 = x9 * x8;
+    <font color="#4E9A06">float</font> x18 = x9 * x9;
+    <font color="#4E9A06">float</font> x19 = x10 * x9;
+    <font color="#4E9A06">float</font> x20 = x10 * x10;
+    <font color="#4E9A06">float</font> x21 = x11 * x10;
+    <font color="#4E9A06">float</font> x22 = x11 * x11;
+    <font color="#4E9A06">float</font> x23 = x12 * x11;
+    <font color="#4E9A06">float</font> x24 = x12 * x12;
+    <font color="#4E9A06">float</font> x25 = x13 * x12;
+    <font color="#4E9A06">float</font> x26 = x13 * x13;
+    <font color="#4E9A06">float</font> x27 = x14 * x13;
+    <font color="#4E9A06">float</font> x28 = x14 * x14;
+    <font color="#4E9A06">float</font> x29 = x15 * x14;
+    <font color="#4E9A06">float</font> x30 = x15 * x15;
+    <font color="#4E9A06">float</font> x31 = x16 * x15;
+    <font color="#4E9A06">float</font> x32 = x16 * x16;
+    <font color="#4E9A06">float</font> x33 = x17 * x16;
+
+    numerators[<font color="#CC0000">0</font>] = x2;
+    numerators[<font color="#CC0000">1</font>] = x3;
+    numerators[<font color="#CC0000">2</font>] = x4;
+    numerators[<font color="#CC0000">3</font>] = x5;
+    numerators[<font color="#CC0000">4</font>] = x6;
+    numerators[<font color="#CC0000">5</font>] = x7;
+    numerators[<font color="#CC0000">6</font>] = x8;
+    numerators[<font color="#CC0000">7</font>] = x9;
+    numerators[<font color="#CC0000">8</font>] = x10;
+    numerators[<font color="#CC0000">9</font>] = x11;
+    numerators[<font color="#CC0000">10</font>] = x12;
+    numerators[<font color="#CC0000">11</font>] = x13;
+    numerators[<font color="#CC0000">12</font>] = x14;
+    numerators[<font color="#CC0000">13</font>] = x15;
+    numerators[<font color="#CC0000">14</font>] = x16;
+    numerators[<font color="#CC0000">15</font>] = x17;
+    numerators[<font color="#CC0000">16</font>] = x18;
+    numerators[<font color="#CC0000">17</font>] = x19;
+    numerators[<font color="#CC0000">18</font>] = x20;
+    numerators[<font color="#CC0000">19</font>] = x21;
+    numerators[<font color="#CC0000">20</font>] = x22;
+    numerators[<font color="#CC0000">21</font>] = x23;
+    numerators[<font color="#CC0000">22</font>] = x24;
+    numerators[<font color="#CC0000">23</font>] = x25;
+    numerators[<font color="#CC0000">24</font>] = x26;
+    numerators[<font color="#CC0000">25</font>] = x27;
+    numerators[<font color="#CC0000">26</font>] = x28;
+    numerators[<font color="#CC0000">27</font>] = x29;
+    numerators[<font color="#CC0000">28</font>] = x30;
+    numerators[<font color="#CC0000">29</font>] = x31;
+    numerators[<font color="#CC0000">30</font>] = x32;
+    numerators[<font color="#CC0000">31</font>] = x33;
+
+    <font color="#3465A4">/*</font>
+<font color="#3465A4">     * Use AVX to compute 8 divisions at a time</font>
+<font color="#3465A4">     */</font>
+    <font color="#AF5F00">for</font> (i = <font color="#CC0000">0</font>; i &lt; <font color="#CC0000">32</font>; i += <font color="#CC0000">8</font>) {
+        <font color="#4E9A06">const</font> __m256 a = _mm256_load_ps(&amp;numerators[i]);
+        <font color="#4E9A06">const</font> __m256 b = _mm256_load_ps(&amp;EXPF_DIVISORS[i]);
+        <font color="#4E9A06">const</font> __m256 res = _mm256_div_ps(a, b);
+
+        _mm256_stream_ps(&amp;result[i], res);
+    }
+
+    <font color="#3465A4">/*</font>
+<font color="#3465A4">     * Sum together all of the results from division</font>
+<font color="#3465A4">     */</font>
+    <font color="#AF5F00">for</font> (i = <font color="#CC0000">0</font>; i &lt; <font color="#CC0000">32</font>; i++) {
+        acc += result[i];
+    }
+    <font color="#AF5F00">return</font> acc;
+}</pre>
+</div>
+
+<p>And that's all there is to it!</p>
+
+<p>
+    Now that we've covered exponentiation, let's take a look at its inverse,
+    logarithms! Logarithms are a little more challenging to compute, but by
+    using Newton's Method, we can reformulate <i>log(x)</i> in terms of
+    <i>exp(x)</i>. Let's take a look at the definition of Newton's Method.
+</p>
+
+<p>
+    Newton's Method is an iterative algorithm where you start with a guess for
+    what you think the true answer might be, then refine this guess by
+    repeatedly applying the formula below.
+</p>
+<img class="img" src="image/newtons-method.svg" />
+
+<p>
+    We can solve for <i>log(x)</i> by solving for <i>y - log(x)</i>. Let's
+    consider the property of <i>log(x)</i> and <i>exp(x)</i> in that they are
+    inverses of each other, concretely <i>x = exp(log(x)) = log(exp(x))</i>.
+    Keeping this in mind, we can eliminate the logarithm from our initial
+    equation by distributing <i>exp</i> to each term, and using that function in
+    our Newton's Method approximation. Let's see that below:
+</p>
+
+<p>First, let's find our <i>f(y)</i></p>
+
+<div class="codeblock">
+    <pre>
+        f(y) = exp(y) - exp(log(x))
+        f(y) = exp(y) - x
+    </pre>
+</div>
+
+<p>Next, to satisfy Newton's Method, we will need to find its derivative.</p>
+
+<div class="codeblock">
+    <pre>
+        f'(y) = exp(y)
+    </pre>
+</div>
+
+<p>
+    We can now fill in the formula for Newton's Method, simplifying along the
+    way.
+</p>
+<img class="img" src="image/newtons-method-log_x.svg" />
+
+<p>
+    This formula will refine our guess for what <i>log(x)</i> is on each
+    iteration, provided we start with a <i>"good enough"</i> guess. Newton's
+    Method is famous for diverging when the guess is not good enough, so we need
+    to come up with a starting value that won't make us diverge!
+</p>
+
+<p>
+    As stated earlier, we'll be looking at only IEEE-754 Single Precision
+    floating point representations. Let's take a look at the spec to see if
+    there is any useful information that this representation gives for free!
+</p>
+
+<img class="img" src="image/single-precision-float.svg" />
+
+<p>
+    We can see that floats have an exponent section. Concretely, a floating
+    point number equals the fraction times ten to the power of the exponent.
+    Since <i>log<sub>10</sub>(10<sup>x</sup>) = x</i>, the exponent field is
+    going to give us the <i>log<sub>10</sub></i> of our number, which we can
+    hypothesize will be close to the natural log of the value.
+</p>
+
+<p>
+    In order to extract the exponent section, we can bitwise <i>AND</i> the
+    number with a mask of <i>ones</i> in the place where the exponent bits are,
+    then shift over by the number of bits in the fraction. If we look at the
+    code block below, lets say that 's' is the sign bit, 'e' are the exponent
+    bits, and 'f' are the fraction bits. Let's see how this mask works. Recall
+    that the first 'e' bit is actually the sign of the exponent, so if we ignore
+    negative numbers, we can ignore this bit in the mask.
+</p>
+
+<div class="codeblock">
+    <pre>
+    seeeeeeeefffffffffffffffffffffff
+  & 00111111100000000000000000000000
+    --------------------------------
+    0eeeeeeee00000000000000000000000
+    </pre>
+</div>
+
+<div>
+    Shifting to the right by 23 places removes the place where the fraction bits
+    were, and gives us the exponent.
+</div>
+
+<div class="codeblock">
+    <pre>
+    0eeeeeeee00000000000000000000000 >> 23 = eeeeeeee
+    </pre>
+</div>
+
+<p>Using Python, let's convert this mask into hex.</p>
+
+<div class="codeblock">
+    <pre><font color="#008700">In [</font><font color="#586E75"><b>1</b></font><font color="#008700">]: hex</font>(<font color="#008700">0b00111111100000000000000000000000</font>)
+<font color="#870000">Out[</font><font color="#CB4B16"><b>1</b></font><font color="#870000">]: </font>&apos;0x3f800000&apos;</pre>
+</div>
+
+<p>
+    Finally, we just need to turn this pseudo code into C! Notice that we are
+    type punning through a union, as casting through pointers violates strict
+    aliasing, and therefore is undefined behavior. By going through a union, we
+    have a portable and safe means of type punning the float to an unsigned int
+    needed for the bitwise operations.
+</p>
+<div class="codeblock">
+    <pre><font color="#4E9A06">union</font> FloatAsInt {
+    <font color="#4E9A06">uint32_t</font> i;
+    <font color="#4E9A06">float</font> f;
+};
+
+<font color="#4E9A06">static</font> <font color="#4E9A06">float</font> get_guess(<font color="#4E9A06">float</font> x) {
+    <font color="#4E9A06">const</font> <font color="#4E9A06">uint32_t</font> exponent_mask = <font color="#CC0000">0x3f800000</font>;
+    <font color="#4E9A06">float</font> guess;
+    <font color="#4E9A06">union</font> FloatAsInt x_as_int;
+    <font color="#4E9A06">uint32_t</font> exponent;
+
+    x_as_int.f = x;
+    exponent = (x_as_int.i &amp; exponent_mask) &gt;&gt; <font color="#CC0000">23</font>;
+    guess = exponent;
+    <font color="#AF5F00">return</font> guess;
+}
+</pre>
+</div>
+
+<p>
+    Now that we have a pretty good guess, we now need to refine it to be a close
+    approximation of <i>log(x)</i>. We will repeatedly apply the formula we
+    derived above using Newton's Method. I found through experimentation that
+    manually unrolling the loop was faster than a for loop, so that is why we
+    see this copy-pasted.
+</p>
+
+<div class="codeblock">
+    <pre><font color="#4E9A06">static</font> <font color="#4E9A06">const</font> <font color="#4E9A06">float</font> CLOSE_TO_ZERO = <font color="#CC0000">1e-10</font>;
+
+<font color="#4E9A06">static</font> <font color="#4E9A06">float</font> newtons_method_log(<font color="#4E9A06">float</font> x, <font color="#4E9A06">float</font> guess) {
+    <font color="#4E9A06">float</font> y = guess;
+
+    <font color="#3465A4">/* manual unrolling in this case was MUCH faster than a for loop */</font>
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+    y = y - <font color="#CC0000">1.0f</font> + x / myexpf(y);
+
+    <font color="#AF5F00">if</font> (fabsf(y) &lt; CLOSE_TO_ZERO) {
+        <font color="#AF5F00">return</font> <font color="#CC0000">0</font>;
+    } <font color="#AF5F00">else</font> {
+        <font color="#AF5F00">return</font> y;
+    }
+}
+</pre>
+</div>
+
+<p>Putting this together, let's wrap log up into an easy to use function.</p>
+<div class="codeblock">
+    <pre><font color="#4E9A06">float</font> mylogf(<font color="#4E9A06">float</font> x) {
+    <font color="#AF5F00">if</font> (x &lt; <font color="#CC0000">0</font>) {
+        <font color="#AF5F00">return</font> NAN;
+    } <font color="#AF5F00">else</font> <font color="#AF5F00">if</font> (x == <font color="#CC0000">0</font>) {
+        <font color="#AF5F00">return</font> -INFINITY;
+    } <font color="#AF5F00">else</font> <font color="#AF5F00">if</font> (fabsf(x) &lt; CLOSE_TO_ZERO) {
+        <font color="#AF5F00">return</font> <font color="#CC0000">1</font>;
+    } <font color="#AF5F00">else</font> {
+        <font color="#4E9A06">const</font> <font color="#4E9A06">float</font> guess = get_guess(x);
+        <font color="#4E9A06">float</font> y = newtons_method_log(x, guess);
+        <font color="#AF5F00">return</font> y;
+    }
+}
+</pre>
+</div>
+
+<p>But wait, there's more!</p>
+
+<p>
+    Now that we have exp and log, we can get sqrt for free by exploiting a
+    simple property of logarithms and exponentiation! I'll prove to you that
+    <i>sqrt(x) = exp(0.5 * log(x))</i> Remember that <i>a^(x * y) = (a^x)^y</i>
+</p>
+
+<div class="codeblock">
+    <pre>
+    exp(0.5 * log(x)) = exp(log(x))^0.5 = x^0.5 = sqrt(x)
+    QED
+    </pre>
+</div>
+
+<p>
+    We can generalize this even further into computing <i>pow</i> for arbitrary
+    inputs.
+</p>
+
+<div class="codeblock">
+    <pre>
+    exp(y * log(x)) = exp(log(x))^y = x^y = pow(x, y)
+    QED
+    </pre>
+</div>
+
+<p>
+    Therefore, with the <i>exp</i> and <i>log</i> functions that we created from
+    scratch above, we can use those to create pow in one line of code!
+</p>
+
+<div class="codeblock">
+    <pre><font color="#4E9A06">float</font> mypowf(<font color="#4E9A06">float</font> x, <font color="#4E9A06">float</font> y) {
+    <font color="#AF5F00">return</font> myexpf(y * mylogf(x));
+}</pre>
+</div>
+
+<p>
+    Remember, these functions are not meant for production use. The standard
+    library of your language of choice most likely has more optimized
+    implementations of these algorithms, but now that you can see simple ways
+    how they work, I hope that this demystifies them. Nothing in programming is
+    magic, someone had to write every line of code that exists!
+</p>
